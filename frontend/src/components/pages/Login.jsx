@@ -1,49 +1,56 @@
 import React, { useState } from 'react';
-import { Button, Box, Alert, Typography } from '@mui/material';
+import { Button, Box, Alert, Typography, IconButton, InputAdornment } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TextLine from '../commonUI/TextLine';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import axios from 'axios';
 
 function Login () {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const handleMouseDownPassword = (event) => {
+    event.preventDefault();
+  };
+
   const handleLogin = async () => {
-    setError(''); // 清除旧的错误信息
+    setError('');
     if (!email) {
       setError('Please enter your email');
       return;
     }
     try {
-      const response = await fetch('http://localhost:5005/admin/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post('http://localhost:5005/admin/auth/login', {
+        email,
+        password
       });
 
-      const data = await response.json();
-      if (response.ok) {
-        // 登录成功
-        console.log('Login successful:', data);
-        localStorage.setItem('token', data.token);// 保存token
-        navigate('/Dashboard');// 跳转到dashboard
-      } else {
-        // 登录失败
-        setError(data.error || 'Failed to login');
-      }
+      console.log('Login successful:', response.data);
+      localStorage.setItem('token', response.data.token);
+      navigate('/dashboard');
     } catch (error) {
-      // 网络或其他错误处理
-      setError('Network error, please try again later.');
+      if (error.response) {
+        setError(error.response.data.error || 'Failed to login');
+      } else if (error.request) {
+        setError('No response from server');
+      } else {
+        setError('Error setting up the request');
+      }
     }
   };
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
-      {error && <Alert severity="error" style={{ width: '100%', marginBottom: 20 }}>{error}</Alert>}
-      <Typography variant="h5" component="h2" style={{ marginBottom: 20 }}>Log in here</Typography>
+      {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
+      <Typography variant="h5" component="h2" sx={{ mb: 2 }}>Log in here</Typography>
       <TextLine
         label="Email"
         value={email}
@@ -52,15 +59,29 @@ function Login () {
       />
       <TextLine
         label="Password"
-        type="password"
         value={password}
+        type={showPassword ? 'text' : 'password'}
         onChange={(e) => setPassword(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+        InputProps={{
+          endAdornment: (
+            <InputAdornment position="end">
+              <IconButton
+                aria-label="toggle password visibility"
+                onClick={togglePasswordVisibility}
+                onMouseDown={handleMouseDownPassword}
+                edge="end"
+              >
+                {showPassword ? <VisibilityOff /> : <Visibility />}
+              </IconButton>
+            </InputAdornment>
+          )
+        }}
       />
-      <Button variant="contained" color="primary" onClick={handleLogin} style={{ width: '25%', maxWidth: 400, height: 45, marginTop: 20 }}>
+      <Button variant="contained" color="primary" onClick={handleLogin} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Login
       </Button>
-      <Button variant="contained" color="primary" onClick={() => navigate('/register')} style={{ width: '25%', maxWidth: 400, height: 45, marginTop: 20 }}>
+      <Button variant="outlined" color="primary" onClick={() => navigate('/register')} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Register
       </Button>
     </Box>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Box, Alert, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TextLine from '../commonUI/TextLine';
+import axios from 'axios';
 
 function Register () {
   const [email, setEmail] = useState('');
@@ -25,30 +26,26 @@ function Register () {
     }
 
     try {
-      const response = await fetch('http://localhost:5005/admin/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, name, password }),
+      const { data } = await axios.post('http://localhost:5005/admin/auth/register', {
+        email, name, password
       });
-
-      const data = await response.json();
-      if (response.ok) {
-        console.log('Registration successful:', data);
-        navigate('/Dashboard');// 注册成功后跳转到登录页面
-      } else {
-        setError(data.error || 'Failed to register');
-      }
+      console.log('Registration successful:', data);
+      navigate('/login');// 注册成功后跳转到登录页面
     } catch (error) {
-      setError('Network error, please try again later.');
+      if (error.response) {
+        setError(error.response.data.error || 'Failed to register');
+      } else if (error.request) {
+        setError('No response from server');
+      } else {
+        setError('Error setting up the request');
+      }
     }
   };
 
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
-      {error && <Alert severity="error" style={{ width: '100%', marginBottom: 20 }}>{error}</Alert>}
-      <Typography variant="h5" component="h2" style={{ marginBottom: 20 }}>Register Account</Typography>
+      {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
+      <Typography variant="h5" component="h2" sx={{ mb: 2 }}>Register Account</Typography>
       <TextLine
         label="Email"
         value={email}
@@ -75,10 +72,10 @@ function Register () {
         onChange={(e) => setConfirmPassword(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
       />
-      <Button variant="contained" color="primary" onClick={handleRegister} style={{ width: '25%', maxWidth: 400, height: 45, marginTop: 20 }}>
+      <Button variant="contained" color="primary" onClick={handleRegister} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Register
       </Button>
-      <Button variant="outlined" color="primary" onClick={() => navigate('/login')} style={{ width: '25%', maxWidth: 400, height: 45, marginTop: 20 }}>
+      <Button variant="outlined" color="primary" onClick={() => navigate('/login')} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Back
       </Button>
     </Box>
