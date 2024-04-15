@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Box, Modal, Typography, TextField, AppBar, Toolbar } from '@mui/material';
+import { Button, Box, Modal, Typography, TextField, AppBar, Toolbar, Grid, Card, CardContent, CardActionArea } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,27 +7,32 @@ function Dashboard () {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [presentationName, setPresentationName] = useState('');
-  // const [presentations, setPresentations] = useState({});
+  const [presentations, setPresentations] = useState({});
   const [createTrigger, setCreateTrigger] = useState(false);
 
-  // const fetchPresentations = async (token) => {
-  //   try {
-  //     const response = await axios.get('http://localhost:5005/store', {
-  //       headers: { Authorization: `Bearer ${token}` },
-  //     });
-  //     setPresentations(response.data.store.store.presentations || {});
-  //   } catch (error) {
-  //     console.error('Error fetching presentations:', error);
-  //   }
-  // };
+  // get the presentations in backend
+  const fetchPresentations = async (token) => {
+    try {
+      const response = await axios.get('http://localhost:5005/store', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      // console.log(response.data.store.store.presentations);
+      setPresentations(response.data.store.store.presentations || {});
+    } catch (error) {
+      console.error('Error fetching presentations:', error);
+    }
+  };
 
   // useEffect for handling login redirect if no token
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
+    } else {
+      fetchPresentations(token);// get the presentations
     }
   }, [navigate]);
+
   // Log out logic
   const handleLogout = async () => {
     const token = localStorage.getItem('token');
@@ -54,7 +59,7 @@ function Dashboard () {
     }
   };
 
-  // useEffect for creating presentation when conditions are met
+  // useEffect for creating presentation when conditions
   useEffect(() => {
     if (!createTrigger || !presentationName) return;
     const createPresentation = async () => {
@@ -76,14 +81,18 @@ function Dashboard () {
         // Append new presentation if not exists
         const newpresentations = {
           ...storeData.presentations,
-          [presentationName]: { page: 1, slides: {} }
+          [presentationName]: {
+            pageNum: 1,
+            slides: { slide1: { content1: { type: '', date: '' } } },
+            description: ''
+          }
         };
 
         await axios.put('http://localhost:5005/store', { store: { ...storeData, presentations: newpresentations } }, {
           headers: { Authorization: `Bearer ${token}` },
         });
         console.log('New presentation created successfully.');
-        // fetchPresentations(token);
+        fetchPresentations(token);
       } catch (error) {
         console.error('Error creating new presentation:', error);
       }
@@ -111,40 +120,40 @@ function Dashboard () {
     }
   };
 
-  const addTitle = (
-    <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4 }}>
-      <Typography variant="h6" component="h2">
-        Create New Presentation
-      </Typography>
-      <TextField
-        autoFocus
-        margin="dense"
-        id="name"
-        label="Presentation Name"
-        type="text"
-        fullWidth
-        variant="outlined"
-        value={presentationName}
-        onChange={(e) => setPresentationName(e.target.value)}
-      />
-      <Box display="flex" justifyContent="flex-end" width="100%">
-        <Button onClick={handleCreateClick} color="primary">
-          Create
-        </Button>
-      </Box>
-    </Box>
-  );
-
-  // const presentationCards = Object.keys(presentations).map(name => (
-  //   <Grid item xs={12} sm={6} md={4} key={name}>
-  //     <Card sx={{ width: 300, height: 150 }}>
-  //       <CardContent>
-  //         <Typography variant="h6">{name}</Typography>
-  //         <Typography variant="body2">{`Slides: ${presentations[name].slides.length}`}</Typography>
-  //       </CardContent>
-  //     </Card>
-  //   </Grid>
-  // ));
+  // console.log(presentations);
+  const presentationCards = Object.keys(presentations).map(name => {
+    const presentation = presentations[name];
+    return (
+      <Grid item xs={12} sm={6} md={4} key={name}>
+        <Card sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: '30vw', height: '15vw', m: 3 }}>
+          <CardActionArea onClick={() => navigate(`/presentation/${name}`)}>
+            {/* <CardMedia
+              component="img"
+              height="140"
+              image="/static/images/cards/contemplative-reptile.jpg" // Change to your dynamic image if available
+              alt="presentation thumbnail"
+            /> */}
+            <Box
+            sx={{ height: '10vw', bgcolor: 'grey.300' }}
+            />
+            <CardContent sx={{ padding: '8px', flexGrow: 1, overflow: 'hidden' }} >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography gutterBottom variant="h5" noWrap>
+                {name}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" noWrap>
+                {`Slides: ${presentation.pageNum || 0}`}
+              </Typography>
+              </Box>
+              <Typography variant="body2" color="text.secondary" noWrap>
+                {presentation.description || ''}
+              </Typography>
+            </CardContent>
+          </CardActionArea>
+        </Card>
+      </Grid>
+    );
+  });
 
   return (
     <>
@@ -156,18 +165,38 @@ function Dashboard () {
           </Box>
         </Toolbar>
       </AppBar>
-      {/* <Box sx={{ flexGrow: 1, p: 3 }}>
+      <Box sx={{ flexGrow: 1, p: 3 }}>
         <Grid container spacing={2}>
           {presentationCards}
         </Grid>
-      </Box> */}
+      </Box>
       <Modal
         open={open}
         onClose={handleClose}
         aria-labelledby="create-new-presentation"
         aria-describedby="create-presentation-modal"
       >
-        {addTitle}
+        <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4 }}>
+          <Typography variant="h6" component="h2">
+            Create New Presentation
+          </Typography>
+          <TextField
+          autoFocus
+          margin="dense"
+          id="name"
+          label="Presentation Name"
+          type="text"
+          fullWidth
+          variant="outlined"
+          value={presentationName}
+          onChange={(e) => setPresentationName(e.target.value)}
+          />
+          <Box display="flex" justifyContent="flex-end" width="100%">
+          <Button onClick={handleCreateClick} color="primary">
+            Create
+          </Button>
+          </Box>
+        </Box>
       </Modal>
     </>
   );
