@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Box, Modal, Typography, TextField, AppBar, Toolbar, Grid, Card, CardContent, CardActionArea } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { useLogout } from '../../hook/useLogout';
+import { fetchData } from '../../services/getData';
+import { upgradeData } from '../../services/putData';
 
 function Dashboard () {
   const navigate = useNavigate();
@@ -10,54 +12,15 @@ function Dashboard () {
   const [presentations, setPresentations] = useState({});
   const [createTrigger, setCreateTrigger] = useState(false);
 
-  // get the presentations in backend
-  const fetchPresentations = async (token) => {
-    try {
-      const response = await axios.get('http://localhost:5005/store', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      // console.log(response.data.store.store.presentations);
-      setPresentations(response.data.store.store.presentations || {});
-    } catch (error) {
-      console.error('Error fetching presentations:', error);
-    }
-  };
-
   // useEffect for handling login redirect if no token
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
     } else {
-      fetchPresentations(token);// get the presentations
+      fetchData(token).then(store => setPresentations(store.presentations || {}));// get the presentations
     }
   }, [navigate]);
-
-  // Log out logic
-  const handleLogout = async () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      try {
-        await axios.post('http://localhost:5005/admin/auth/logout', {}, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-        });
-        console.log('Logout successful');
-      } catch (error) {
-        if (error.response) {
-          console.error('Logout failed', error.response.data);
-        } else if (error.request) {
-          console.error('Logout failed', error.request);
-        } else {
-          console.error('Error', error.message);
-        }
-      }
-      localStorage.removeItem('token');
-      navigate('/login');
-    }
-  };
 
   // useEffect for creating presentation when conditions
   useEffect(() => {
@@ -66,33 +29,24 @@ function Dashboard () {
       try {
         const token = localStorage.getItem('token');
         if (!token) return;
-
-        const response = await axios.get('http://localhost:5005/store', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const storeData = response.data.store.store;
-        console.log(storeData.presentations);
-
+        const storeData = await fetchData(token);
         if (storeData.presentations && storeData.presentations[presentationName]) {
           console.log('Presentation already exists.');
           return;
         }
 
         // Append new presentation if not exists
-        const newpresentations = {
+        const newPresentations = {
           ...storeData.presentations,
           [presentationName]: {
             pageNum: 1,
-            slides: { slide1: { content1: { type: '', date: '' } } },
+            slides: { slide1: { id: 1, content1: { type: '', data: '' } } },
             description: ''
           }
         };
 
-        await axios.put('http://localhost:5005/store', { store: { ...storeData, presentations: newpresentations } }, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        console.log('New presentation created successfully.');
-        fetchPresentations(token);
+        await upgradeData(token, { ...storeData, presentations: newPresentations });
+        fetchData(token).then(store => setPresentations(store.presentations || {}));
       } catch (error) {
         console.error('Error creating new presentation:', error);
       }
@@ -125,29 +79,27 @@ function Dashboard () {
     const presentation = presentations[name];
     return (
       <Grid item xs={12} sm={6} md={4} key={name}>
-        <Card sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: '30vw', height: '15vw', m: 3 }}>
-          <CardActionArea onClick={() => navigate(`/presentation/${name}`)}>
+        <Card sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: '30vw', height: '15vw', minHeight: 50, maxHeight: 150, m: 3 }}>
+          <CardActionArea onClick={() => navigate(`/presentation/${name}`)} sx={{ display: 'flex', width: '100%' }}>
             {/* <CardMedia
               component="img"
               height="140"
               image="/static/images/cards/contemplative-reptile.jpg" // Change to your dynamic image if available
               alt="presentation thumbnail"
             /> */}
-            <Box
-            sx={{ height: '10vw', bgcolor: 'grey.300' }}
-            />
-            <CardContent sx={{ padding: '8px', flexGrow: 1, overflow: 'hidden' }} >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography gutterBottom variant="h5" noWrap>
+            <Box sx={{ width: '50%', height: '100%', bgcolor: 'grey.300' }} />
+            <CardContent sx={{ padding: 0, width: '50%', height: '100%', overflow: 'hidden' }} >
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', m: 1 }}>
+              <Typography gutterBottom variant="h6" noWrap>
                 {name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
                 {`Slides: ${presentation.pageNum || 0}`}
               </Typography>
-              </Box>
               <Typography variant="body2" color="text.secondary" noWrap>
                 {presentation.description || ''}
               </Typography>
+              </Box>
             </CardContent>
           </CardActionArea>
         </Card>
@@ -161,7 +113,7 @@ function Dashboard () {
         <Toolbar>
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end' }}>
             <Button color="inherit" onClick={handleOpen}>New Presentation</Button>
-            <Button color="inherit" onClick={handleLogout}>Logout</Button>
+            <Button color="inherit" onClick={useLogout()}>Logout</Button>
           </Box>
         </Toolbar>
       </AppBar>
