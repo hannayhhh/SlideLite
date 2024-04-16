@@ -39,7 +39,6 @@ function Dashboard () {
         const newPresentations = {
           ...storeData.presentations,
           [presentationName]: {
-            pageNum: 1,
             slides: { slide1: { id: 1, content1: { type: '', data: '' } } },
             description: ''
           }
@@ -94,7 +93,7 @@ function Dashboard () {
                 {name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
-                {`Slides: ${presentation.pageNum || 0}`}
+                {`Slides: ${Object.keys(presentation.slides || {}).length}`}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
                 {presentation.description || ''}

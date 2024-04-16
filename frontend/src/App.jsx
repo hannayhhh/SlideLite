@@ -4,18 +4,22 @@ import Login from './components/pages/Login';
 import Register from './components/pages/Register';
 import Dashboard from './components/pages/Dashboard';
 import Presentation from './components/pages/Presentation';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './components/theme';
 
 function App () {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path='register' element={<Register/>} />
-        <Route path='login' element={<Login/>} />
-        <Route path='dashboard' element={<Dashboard/>} />
-        <Route path='/' element={<Login/>} />
-        <Route path='presentation/:pptName' element={<Presentation/>} />
-      </Routes>
-    </BrowserRouter>
+    <ThemeProvider theme={theme}>
+      <BrowserRouter>
+        <Routes>
+          <Route path='register' element={<Register/>} />
+          <Route path='login' element={<Login/>} />
+          <Route path='dashboard' element={<Dashboard/>} />
+          <Route path='/' element={<Login/>} />
+          <Route path='presentation/:pptName' element={<Presentation/>} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

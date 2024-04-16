@@ -50,7 +50,7 @@ function Login () {
   return (
     <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" minHeight="100vh">
       {error && <Alert severity="error" sx={{ width: '100%', mb: 2 }}>{error}</Alert>}
-      <Typography variant="h5" component="h2" sx={{ mb: 2 }}>Log in here</Typography>
+      <Typography variant="h4" component="h1" sx={{ mb: 2, color: '#424242' }}>Log in here</Typography>
       <TextLine
         label="Email"
         value={email}

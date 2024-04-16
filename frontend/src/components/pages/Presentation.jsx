@@ -5,38 +5,27 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import useDeletePPT from '../../hook/useDelete';
 import useEditTitle from '../../hook/useEditTitle';
+import useSlideManager from '../../hook/useSlideManager';
 import { useLogout } from '../../hook/useLogout';
-import { fetchData } from '../../services/getData';
 
 function Presentation () {
   const navigate = useNavigate();
   const { pptName } = useParams();
   const [editedName, setEditedName] = useState(pptName);
-  const [presentation, setPresentation] = useState(null);
   const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
   const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
+  const { slides, currentSlideIndex, handleAddSlide, deleteSlide, nextSlide, previousSlide } = useSlideManager(pptName);
 
   useEffect(() => {
-    const fetchPresentation = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login');
-        return;
-      }
-      try {
-        fetchData(token).then(store => setPresentation(store.presentations[pptName]));
-      } catch (error) {
-        console.error('Error fetching presentation:', error);
-      }
-    };
-    fetchPresentation();
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+    }
   }, [pptName, navigate]);
-
-  console.log(presentation);
 
   return (
     <>
-      <AppBar position="static">
+      <AppBar position="static" sx={{ height: '10vh' }}>
         <Toolbar>
           <Typography variant="h4" sx={{ m: 1 }}>{pptName}</Typography>
           <IconButton color="inherit" onClick={handleEditOpen}>
@@ -49,7 +38,21 @@ function Presentation () {
           </Box>
         </Toolbar>
       </AppBar>
-      {/* 演示文稿编辑内容 */}
+
+      <Box sx={{ display: 'flex', height: '90vh' }}> {/* 假设 AppBar 高度为64px */}
+        <Box sx={{ width: '18%', bgcolor: '#edf4f9' }}>
+        </Box>
+        <Box sx={{ flex: 1, border: '2px dashed gray', m: 5 }}>
+          {/* 显示当前幻灯片内容 */}
+        </Box>
+        <Box sx={{ width: '5%' }}>
+          <button onClick={handleAddSlide}>Add Slide</button>
+          <button onClick={() => deleteSlide(currentSlideIndex + 1)}>Delete Slide</button>
+          {currentSlideIndex > 0 && <button onClick={previousSlide}>Previous</button>}
+          {currentSlideIndex < Object.keys(slides).length - 1 && <button onClick={nextSlide}>Next</button>}
+        </Box>
+      </Box>
+
       <Dialog open={editOpen} onClose={handleEditClose} aria-labelledby="edit-confirmation">
         <Box sx={{ boxShadow: 20, width: 400 }}>
           <DialogTitle>Edit Presentation Name</DialogTitle>
@@ -73,7 +76,7 @@ function Presentation () {
       <Dialog open={deleteOpen} onClose={handleCloseModal} aria-labelledby="delete-confirmation">
         <DialogTitle id="delete-confirmation">Are you sure you want to delete this presentation?</DialogTitle>
         <DialogActions>
-          <Button variant="contained" onClick={handleDelete} color="error">Yes</Button>
+          <Button variant="contained" onClick={handleDelete} color="secondary">Yes</Button>
           <Button variant="contained" onClick={handleCloseModal}>No</Button>
        </DialogActions>
     </Dialog>
