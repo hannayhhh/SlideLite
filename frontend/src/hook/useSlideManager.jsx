@@ -15,6 +15,23 @@ function useSlideManager (pptName) {
     setSlides(storeData.presentations[pptName].slides);
   }
 
+  const renumberSlides = (slides, deleteId) => {
+    const updatedSlides = {};
+    let index = 1;
+    for (const key in slides) {
+      // renew id after delete slide
+      if (key !== `slide${deleteId}`) {
+        updatedSlides[`slide${index}`] = {
+          ...slides[key],
+          id: index
+        };
+        index++;
+      }
+    }
+    return updatedSlides;
+  };
+
+  // Add slide logic
   const handleAddSlide = async () => {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -24,6 +41,7 @@ function useSlideManager (pptName) {
 
     try {
       const storeData = await fetchData(token);
+      setSlides(storeData.presentations[pptName].slides);
       const newSlideId = Object.keys(slides).length + 1;
       const newSlides = {
         ...slides,
@@ -38,34 +56,32 @@ function useSlideManager (pptName) {
         }
       };
       await upgradeData(token, { ...storeData, presentations: newPresentations });
-      fetchSlide();
+      setSlides(newSlides);
     } catch (error) {
       console.error('Failed to add new slide:', error);
     }
   };
 
+  // delete slide logic
   const deleteSlide = async (slideId) => {
+    fetchSlide();
     if (Object.keys(slides).length === 1) {
       alert('Cannot delete the only slide. Please delete the presentation instead.');
       return;
     }
-    fetchSlide();
     const newSlides = { ...slides };
     delete newSlides[`slide${slideId}`];
-
+    const updatedSlides = renumberSlides(newSlides, slideId);
     try {
       const token = localStorage.getItem('token');
       const storeData = await fetchData(token);
-
       const newPresentations = {
         ...storeData.presentations,
         [pptName]: {
           ...storeData.presentations[pptName],
-          slides: newSlides
+          slides: updatedSlides
         }
       };
-
-      setSlides(newSlides);
       await upgradeData(token, { ...storeData, presentations: newPresentations });
       fetchSlide();
     } catch (error) {
@@ -87,7 +103,8 @@ function useSlideManager (pptName) {
     handleAddSlide,
     deleteSlide,
     nextSlide,
-    previousSlide
+    previousSlide,
+    fetchSlide
   };
 }
 

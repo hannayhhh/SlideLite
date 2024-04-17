@@ -14,14 +14,29 @@ function Presentation () {
   const [editedName, setEditedName] = useState(pptName);
   const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
   const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
-  const { slides, currentSlideIndex, handleAddSlide, deleteSlide, nextSlide, previousSlide } = useSlideManager(pptName);
+  const { slides, currentSlideIndex, handleAddSlide, deleteSlide, nextSlide, previousSlide, fetchSlide } = useSlideManager(pptName);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    }
+    } else { fetchSlide(token); }
   }, [pptName, navigate]);
+
+  const renderContent = (content) => {
+    switch (content.type) {
+      case 'text':
+        return <Typography>{content.data}</Typography>;
+      case 'image':
+        return <img src={content.data} alt="Slide Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />;
+      case 'code':
+        return <Typography style={{ fontFamily: 'monospace', backgroundColor: '#f4f4f4', padding: '10px' }}>{content.data}</Typography>;
+      case '':
+        return <Typography>Empty</Typography>;
+      default:
+        return <Typography>Unsupported content type</Typography>;
+    }
+  };
 
   return (
     <>
@@ -42,8 +57,21 @@ function Presentation () {
       <Box sx={{ display: 'flex', height: '90vh' }}> {/* 假设 AppBar 高度为64px */}
         <Box sx={{ width: '18%', bgcolor: '#edf4f9' }}>
         </Box>
-        <Box sx={{ flex: 1, border: '2px dashed gray', m: 5 }}>
-          {/* 显示当前幻灯片内容 */}
+        <Box sx={{ flex: 1, border: '2px dashed gray', m: 5, p: 2, position: 'relative' }}>
+        {slides[`slide${currentSlideIndex + 1}`] ? renderContent(slides[`slide${currentSlideIndex + 1}`].content1) : <Typography>No slide data available.</Typography>}
+        <Typography sx={{
+          position: 'absolute', // 子元素设置为绝对定位
+          bottom: 0, // 定位到底部
+          left: 0, // 定位到左边
+          width: '50px',
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '1em',
+        }}>
+          { slides[`slide${currentSlideIndex + 1}`].id }
+        </Typography>
         </Box>
         <Box sx={{ width: '5%' }}>
           <button onClick={handleAddSlide}>Add Slide</button>
