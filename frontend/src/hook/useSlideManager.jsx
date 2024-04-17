@@ -8,12 +8,15 @@ function useSlideManager (pptName) {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [slides, setSlides] = useState({});
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchSlide = async () => {
+    setIsLoading(true);
     const token = localStorage.getItem('token');
     const storeData = await fetchData(token);
     setSlides(storeData.presentations[pptName].slides);
-  }
+    setIsLoading(false);
+  };
 
   const renumberSlides = (slides, deleteId) => {
     const updatedSlides = {};
@@ -104,7 +107,8 @@ function useSlideManager (pptName) {
     deleteSlide,
     nextSlide,
     previousSlide,
-    fetchSlide
+    fetchSlide,
+    isLoading,
   };
 }
 

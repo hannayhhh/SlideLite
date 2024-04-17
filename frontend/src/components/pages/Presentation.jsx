@@ -3,10 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog, DialogActions, DialogTitle } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import AddIcon from '@mui/icons-material/Add';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import useDeletePPT from '../../hook/useDelete';
 import useEditTitle from '../../hook/useEditTitle';
 import useSlideManager from '../../hook/useSlideManager';
 import { useLogout } from '../../hook/useLogout';
+import SideBar from '../commonUI/sideBar';
 
 function Presentation () {
   const navigate = useNavigate();
@@ -14,13 +18,15 @@ function Presentation () {
   const [editedName, setEditedName] = useState(pptName);
   const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
   const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
-  const { slides, currentSlideIndex, handleAddSlide, deleteSlide, nextSlide, previousSlide, fetchSlide } = useSlideManager(pptName);
+  const { slides, currentSlideIndex, handleAddSlide, deleteSlide, nextSlide, previousSlide, fetchSlide, isLoading } = useSlideManager(pptName);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    } else { fetchSlide(token); }
+    } else {
+      fetchSlide(token);
+    }
   }, [pptName, navigate]);
 
   const renderContent = (content) => {
@@ -54,30 +60,55 @@ function Presentation () {
         </Toolbar>
       </AppBar>
 
-      <Box sx={{ display: 'flex', height: '90vh' }}> {/* 假设 AppBar 高度为64px */}
-        <Box sx={{ width: '18%', bgcolor: '#edf4f9' }}>
-        </Box>
+      <Box sx={{ display: 'flex', height: '90vh' }}>
+        <SideBar></SideBar>
         <Box sx={{ flex: 1, border: '2px dashed gray', m: 5, p: 2, position: 'relative' }}>
-        {slides[`slide${currentSlideIndex + 1}`] ? renderContent(slides[`slide${currentSlideIndex + 1}`].content1) : <Typography>No slide data available.</Typography>}
-        <Typography sx={{
-          position: 'absolute', // 子元素设置为绝对定位
-          bottom: 0, // 定位到底部
-          left: 0, // 定位到左边
-          width: '50px',
-          height: '50px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '1em',
-        }}>
-          { slides[`slide${currentSlideIndex + 1}`].id }
-        </Typography>
+          {isLoading
+            ? <Typography>Loading...</Typography>
+            : <>
+                {slides[`slide${currentSlideIndex + 1}`]
+                  ? renderContent(slides[`slide${currentSlideIndex + 1}`].content1)
+                  : <Typography>No slide data available.</Typography>
+                }
+                <Typography sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  width: '50px',
+                  height: '50px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1em',
+                }}>
+                  {slides[`slide${currentSlideIndex + 1}`] && slides[`slide${currentSlideIndex + 1}`].id}
+                </Typography>
+              </>
+            }
         </Box>
-        <Box sx={{ width: '5%' }}>
-          <button onClick={handleAddSlide}>Add Slide</button>
-          <button onClick={() => deleteSlide(currentSlideIndex + 1)}>Delete Slide</button>
-          {currentSlideIndex > 0 && <button onClick={previousSlide}>Previous</button>}
-          {currentSlideIndex < Object.keys(slides).length - 1 && <button onClick={nextSlide}>Next</button>}
+        <Box sx={{ width: '6%' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '85vh' }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+              <IconButton onClick={handleAddSlide} color="primary" sx={{ mb: 2 }}>
+                <AddIcon />
+              </IconButton>
+              <IconButton onClick={() => deleteSlide(currentSlideIndex + 1)} color="secondary">
+                <DeleteIcon />
+              </IconButton>
+            </Box>
+            <Box sx={{ display: 'flex', flexDirection: 'row' }}>
+              {currentSlideIndex > 0 && (
+                <IconButton onClick={previousSlide} color="inherit">
+                  <NavigateBeforeIcon />
+                </IconButton>
+              )}
+              {currentSlideIndex < Object.keys(slides).length - 1 && (
+                <IconButton onClick={nextSlide} color="inherit">
+                  <NavigateNextIcon />
+                </IconButton>
+              )}
+            </Box>
+          </Box>
         </Box>
       </Box>
 
