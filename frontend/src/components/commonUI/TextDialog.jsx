@@ -11,7 +11,7 @@ function TextDialog ({ slides, slideId }) {
   const [textAreaSize, setTextAreaSize] = useState('');
   const [fontSize, setFontSize] = useState('');
   const [color, setColor] = useState('');
-  const { fetchSlide, updateSlides } = useSlideManager(pptName);
+  const { updateSlides } = useSlideManager(pptName);
 
   const addTextToSlide = () => {
     console.log(slides);
@@ -34,7 +34,6 @@ function TextDialog ({ slides, slideId }) {
     };
     updateSlides(updatedSlides);
     setTextDialogOpen(false);
-    fetchSlide();
   };
 
   const handleTextDialogOpen = () => {
@@ -45,6 +44,8 @@ function TextDialog ({ slides, slideId }) {
     setTextDialogOpen(false);
   };
 
+  // Make sure all the Typography is filled
+  // a little question here, only refresh page can see the new content
   return (
     <>
       <Button variant="outlined" color="inherit" onClick={handleTextDialogOpen} sx={{ m: 2, p: 1, width: '90%', height: '15vh' }}>
@@ -93,7 +94,7 @@ function TextDialog ({ slides, slideId }) {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={addTextToSlide} color="primary">
+          <Button onClick={addTextToSlide} color="primary" disabled={!text || !textAreaSize || !fontSize || !color} >
             Add
           </Button>
           <Button onClick={handleTextDialogClose} color="primary">

@@ -9,7 +9,9 @@ function useSlideManager (pptName) {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
-  // Get the newest slides data
+  /***************************************************************
+                       Get the newest slides data
+  ***************************************************************/
   const fetchSlide = async () => {
     setIsLoading(true);
     const token = localStorage.getItem('token');
@@ -18,7 +20,9 @@ function useSlideManager (pptName) {
     setIsLoading(false);
   };
 
-  // Update the slides to backend
+  /***************************************************************
+                       Update the slides to backend
+  ***************************************************************/
   const updateSlides = async (newSlides) => {
     const token = localStorage.getItem('token');
     if (!token) {

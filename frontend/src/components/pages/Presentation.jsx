@@ -1,17 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog, DialogActions, DialogTitle } from '@mui/material';
+
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+import js from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
+import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
+import c from 'react-syntax-highlighter/dist/esm/languages/hljs/c';
+
 import useDeletePPT from '../../hook/useDelete';
 import useEditTitle from '../../hook/useEditTitle';
 import useSlideManager from '../../hook/useSlideManager';
 import { useLogout } from '../../hook/useLogout';
-// import SideBar from '../commonUI/sideBar';
 import TextDialog from '../commonUI/TextDialog';
+import ImgDialog from '../commonUI/ImgDialog';
+import VedioDialog from '../commonUI/VedioDialog';
+import CodeDialog from '../commonUI/CodeDialog';
 
 function Presentation () {
   const navigate = useNavigate();
@@ -39,6 +48,10 @@ function Presentation () {
     setCurrentSlideIndex(prev => (prev - 1 >= 0 ? prev - 1 : prev));
   };
 
+  SyntaxHighlighter.registerLanguage('javascript', js);
+  SyntaxHighlighter.registerLanguage('python', python);
+  SyntaxHighlighter.registerLanguage('c', c);
+
   const renderContent = (content) => {
     switch (content.type) {
       case 'text':
@@ -55,9 +68,40 @@ function Presentation () {
           </Typography>
         );
       case 'image':
-        return <img src={content.data} alt="Slide Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />;
+        return (
+          <img
+            src={content.data}
+            alt={content.description || 'Slide Image'}
+            style={{
+              maxWidth: content.area ? `${content.area}px` : '100%',
+              maxHeight: content.area ? `${content.area}px` : '100%'
+            }}
+          />
+        );
+      case 'video':
+        return (
+          <video
+            src={content.data.videoURL}
+            width={content.area}
+            autoPlay={content.data.autoPlay}
+            controls
+            style={{ maxWidth: '100%' }}
+          />
+        );
       case 'code':
-        return <Typography style={{ fontFamily: 'monospace', backgroundColor: '#f4f4f4', padding: '10px' }}>{content.data}</Typography>;
+        return (
+          <SyntaxHighlighter
+            language={content.language}
+            style={docco}
+            customStyle={{
+              overflow: 'hidden',
+              fontSize: `${content.size}em`,
+              width: content.area ? `${content.area}px` : 'auto'
+            }}
+          >
+            {content.data.code}
+          </SyntaxHighlighter>
+        );
       case '':
         return;
       default:
@@ -84,6 +128,9 @@ function Presentation () {
       <Box sx={{ display: 'flex', height: '90vh' }}>
         <Box sx={{ width: '18%', bgcolor: '#edf4f9', padding: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <TextDialog slides={slides} slideId={currentSlideIndex + 1}/>
+          <ImgDialog slides={slides} slideId={currentSlideIndex + 1}/>
+          <VedioDialog slides={slides} slideId={currentSlideIndex + 1}/>
+          <CodeDialog slides={slides} slideId={currentSlideIndex + 1}/>
         </Box>
         <Box sx={{ flex: 1, border: '2px dashed gray', m: 5, p: 2, position: 'relative' }}>
           {isLoading
