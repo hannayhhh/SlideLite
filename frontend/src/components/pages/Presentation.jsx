@@ -10,40 +10,61 @@ import useDeletePPT from '../../hook/useDelete';
 import useEditTitle from '../../hook/useEditTitle';
 import useSlideManager from '../../hook/useSlideManager';
 import { useLogout } from '../../hook/useLogout';
-import SideBar from '../commonUI/sideBar';
+// import SideBar from '../commonUI/sideBar';
+import TextDialog from '../commonUI/TextDialog';
 
 function Presentation () {
   const navigate = useNavigate();
   const { pptName } = useParams();
   const [editedName, setEditedName] = useState(pptName);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
   const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
-  const { slides, currentSlideIndex, handleAddSlide, deleteSlide, nextSlide, previousSlide, fetchSlide, isLoading } = useSlideManager(pptName);
+  const { slides, handleAddSlide, deleteSlide, fetchSlide, isLoading } = useSlideManager(pptName);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
     } else {
-      fetchSlide(token);
+      fetchSlide();
     }
   }, [pptName, navigate]);
+
+  const nextSlide = () => {
+    setCurrentSlideIndex(prev => (prev + 1 < Object.keys(slides).length ? prev + 1 : prev));
+  };
+
+  const previousSlide = () => {
+    setCurrentSlideIndex(prev => (prev - 1 >= 0 ? prev - 1 : prev));
+  };
 
   const renderContent = (content) => {
     switch (content.type) {
       case 'text':
-        return <Typography>{content.data}</Typography>;
+        return (
+          <Typography
+            style={{
+              fontSize: `${content.size}em`,
+              color: content.fontcolor,
+              width: `${content.area}px`,
+              overflow: 'hidden'
+            }}
+          >
+            {content.data.text}
+          </Typography>
+        );
       case 'image':
         return <img src={content.data} alt="Slide Image" style={{ maxWidth: '100%', maxHeight: '100%' }} />;
       case 'code':
         return <Typography style={{ fontFamily: 'monospace', backgroundColor: '#f4f4f4', padding: '10px' }}>{content.data}</Typography>;
       case '':
-        return <Typography>Empty</Typography>;
+        return;
       default:
         return <Typography>Unsupported content type</Typography>;
     }
   };
-
+  console.log(slides);
   return (
     <>
       <AppBar position="static" sx={{ height: '10vh' }}>
@@ -61,13 +82,24 @@ function Presentation () {
       </AppBar>
 
       <Box sx={{ display: 'flex', height: '90vh' }}>
-        <SideBar></SideBar>
+        <Box sx={{ width: '18%', bgcolor: '#edf4f9', padding: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <TextDialog slides={slides} slideId={currentSlideIndex + 1}/>
+        </Box>
         <Box sx={{ flex: 1, border: '2px dashed gray', m: 5, p: 2, position: 'relative' }}>
           {isLoading
             ? <Typography>Loading...</Typography>
             : <>
                 {slides[`slide${currentSlideIndex + 1}`]
-                  ? renderContent(slides[`slide${currentSlideIndex + 1}`].content1)
+                  ? (
+                    // Map over each content key in the current slide
+                      Object.keys(slides[`slide${currentSlideIndex + 1}`])
+                        .filter(key => key.startsWith('content')) // Ensure only content keys are processed
+                        .map(contentKey => (
+                        <div key={contentKey}>
+                            {renderContent(slides[`slide${currentSlideIndex + 1}`][contentKey])}
+                        </div>
+                        ))
+                    )
                   : <Typography>No slide data available.</Typography>
                 }
                 <Typography sx={{
@@ -138,7 +170,7 @@ function Presentation () {
           <Button variant="contained" onClick={handleDelete} color="secondary">Yes</Button>
           <Button variant="contained" onClick={handleCloseModal}>No</Button>
        </DialogActions>
-    </Dialog>
+      </Dialog>
   </>
   );
 }

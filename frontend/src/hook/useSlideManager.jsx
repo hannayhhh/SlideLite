@@ -5,17 +5,41 @@ import { upgradeData } from '../services/putData';
 import { fetchData } from '../services/getData';
 
 function useSlideManager (pptName) {
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [slides, setSlides] = useState({});
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
+  // Get the newest slides data
   const fetchSlide = async () => {
     setIsLoading(true);
     const token = localStorage.getItem('token');
     const storeData = await fetchData(token);
     setSlides(storeData.presentations[pptName].slides);
     setIsLoading(false);
+  };
+
+  // Update the slides to backend
+  const updateSlides = async (newSlides) => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const storeData = await fetchData(token);
+      const newPresentations = {
+        ...storeData.presentations,
+        [pptName]: {
+          ...storeData.presentations[pptName],
+          slides: newSlides
+        }
+      };
+      await upgradeData(token, { ...storeData, presentations: newPresentations });
+      fetchSlide();
+    } catch (error) {
+      console.error('Error updating slides:', error);
+    }
   };
 
   const renumberSlides = (slides, deleteId) => {
@@ -34,38 +58,22 @@ function useSlideManager (pptName) {
     return updatedSlides;
   };
 
-  // Add slide logic
+  /***************************************************************
+                       Add Slide
+  ***************************************************************/
   const handleAddSlide = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-
-    try {
-      const storeData = await fetchData(token);
-      setSlides(storeData.presentations[pptName].slides);
-      const newSlideId = Object.keys(slides).length + 1;
-      const newSlides = {
-        ...slides,
-        [`slide${newSlideId}`]: { id: newSlideId, content1: { type: '', data: '' } }
-      };
-
-      const newPresentations = {
-        ...storeData.presentations,
-        [pptName]: {
-          ...storeData.presentations[pptName],
-          slides: newSlides
-        }
-      };
-      await upgradeData(token, { ...storeData, presentations: newPresentations });
-      setSlides(newSlides);
-    } catch (error) {
-      console.error('Failed to add new slide:', error);
-    }
+    fetchSlide();
+    const newSlideId = Object.keys(slides).length + 1;
+    const newSlides = {
+      ...slides,
+      [`slide${newSlideId}`]: { id: newSlideId, content1: { type: '', data: '' } }
+    };
+    updateSlides(newSlides);
   };
 
-  // delete slide logic
+  /***************************************************************
+                       Delete Slide
+  ***************************************************************/
   const deleteSlide = async (slideId) => {
     fetchSlide();
     if (Object.keys(slides).length === 1) {
@@ -75,40 +83,19 @@ function useSlideManager (pptName) {
     const newSlides = { ...slides };
     delete newSlides[`slide${slideId}`];
     const updatedSlides = renumberSlides(newSlides, slideId);
-    try {
-      const token = localStorage.getItem('token');
-      const storeData = await fetchData(token);
-      const newPresentations = {
-        ...storeData.presentations,
-        [pptName]: {
-          ...storeData.presentations[pptName],
-          slides: updatedSlides
-        }
-      };
-      await upgradeData(token, { ...storeData, presentations: newPresentations });
-      fetchSlide();
-    } catch (error) {
-      console.error('Failed to delete slide:', error);
-    }
+    updateSlides(updatedSlides);
   };
 
-  const nextSlide = () => {
-    setCurrentSlideIndex(prev => (prev + 1 < Object.keys(slides).length ? prev + 1 : prev));
-  };
-
-  const previousSlide = () => {
-    setCurrentSlideIndex(prev => (prev - 1 >= 0 ? prev - 1 : prev));
-  };
-
+  /***************************************************************
+                       Return the const and functions
+  ***************************************************************/
   return {
     slides,
-    currentSlideIndex,
     handleAddSlide,
     deleteSlide,
-    nextSlide,
-    previousSlide,
     fetchSlide,
     isLoading,
+    updateSlides,
   };
 }
 
