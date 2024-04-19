@@ -23,6 +23,7 @@ function ImgDialog ({ slides, slideId }) {
       [`slide${slideId}`]: {
         ...slideContents,
         [`content${newContentId}`]: {
+          id: newContentId,
           type: 'image',
           data: imageURL,
           area: imageArea,

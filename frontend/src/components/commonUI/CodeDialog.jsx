@@ -33,6 +33,7 @@ function CodeDialog ({ slides, slideId }) {
       [`slide${slideId}`]: {
         ...slideContents,
         [`content${newContentId}`]: {
+          id: newContentId,
           type: 'code',
           data: { code },
           area: codeAreaSize,

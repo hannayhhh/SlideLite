@@ -14,12 +14,11 @@ function Register () {
 
   const handleRegister = async () => {
     setError('');
-    // 检查所有输入是否已填写
     if (!email || !name || !password || !confirmPassword) {
       setError('Please fill in all fields');
       return;
     }
-    // 检查密码是否匹配
+    // check the tow passwords
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -30,7 +29,7 @@ function Register () {
         email, name, password
       });
       console.log('Registration successful:', data);
-      navigate('/login');// 注册成功后跳转到登录页面
+      navigate('/login');// drop tp login
     } catch (error) {
       if (error.response) {
         setError(error.response.data.error || 'Failed to register');

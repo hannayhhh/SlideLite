@@ -24,6 +24,7 @@ function TextDialog ({ slides, slideId }) {
       [`slide${slideId}`]: {
         ...slideContents,
         [`content${newContentId}`]: {
+          id: newContentId,
           type: 'text',
           data: { text },
           area: textAreaSize,

@@ -46,6 +46,9 @@ function useSlideManager (pptName) {
     }
   };
 
+  /***************************************************************
+                       Renumber Slides
+  ***************************************************************/
   const renumberSlides = (slides, deleteId) => {
     const updatedSlides = {};
     let index = 1;
@@ -70,7 +73,7 @@ function useSlideManager (pptName) {
     const newSlideId = Object.keys(slides).length + 1;
     const newSlides = {
       ...slides,
-      [`slide${newSlideId}`]: { id: newSlideId, content1: { type: '', data: '' } }
+      [`slide${newSlideId}`]: { id: newSlideId, background: '#fff', backgroundStyle: '', content1: { type: '', data: '' } }
     };
     updateSlides(newSlides);
   };
@@ -91,6 +94,44 @@ function useSlideManager (pptName) {
   };
 
   /***************************************************************
+                       Delete Element
+  ***************************************************************/
+  const deleteElement = async (slideId, contentId) => {
+    await fetchSlide();
+    const newSlides = { ...slides };
+    const currentSlideContents = newSlides[`slide${slideId}`];
+
+    if (currentSlideContents && currentSlideContents[`content${contentId}`]) {
+      delete currentSlideContents[`content${contentId}`];
+
+      const updatedContents = renumberContents(currentSlideContents, contentId);
+
+      newSlides[`slide${slideId}`] = {
+        ...currentSlideContents,
+        ...updatedContents
+      };
+      updateSlides(newSlides);
+    } else {
+      console.error('Slide or content does not exist');
+    }
+  };
+
+  const renumberContents = (contents, deleteContentId) => {
+    const updatedContents = {};
+    let newIndex = 1;
+    for (const key in contents) {
+      if (key.startsWith('content') && key !== `content${deleteContentId}`) {
+        updatedContents[`content${newIndex}`] = {
+          ...contents[key],
+          id: newIndex
+        };
+        newIndex++;
+      }
+    }
+    return updatedContents;
+  };
+
+  /***************************************************************
                        Return the const and functions
   ***************************************************************/
   return {
@@ -100,6 +141,7 @@ function useSlideManager (pptName) {
     fetchSlide,
     isLoading,
     updateSlides,
+    deleteElement,
   };
 }
 

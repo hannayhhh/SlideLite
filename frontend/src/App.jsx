@@ -6,6 +6,7 @@ import Dashboard from './components/pages/Dashboard';
 import Presentation from './components/pages/Presentation';
 import { ThemeProvider } from '@mui/material/styles';
 import theme from './components/theme';
+import Preview from './components/pages/Preview';
 
 function App () {
   return (
@@ -17,6 +18,7 @@ function App () {
           <Route path='dashboard' element={<Dashboard/>} />
           <Route path='/' element={<Login/>} />
           <Route path='presentation/:pptName' element={<Presentation/>} />
+          <Route path="/:pptName/preview" element={<Preview/>} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

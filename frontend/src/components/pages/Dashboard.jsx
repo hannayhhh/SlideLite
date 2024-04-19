@@ -39,7 +39,7 @@ function Dashboard () {
         const newPresentations = {
           ...storeData.presentations,
           [presentationName]: {
-            slides: { slide1: { id: 1, content1: { type: '', data: '' } } },
+            slides: { slide1: { id: 1, background: '#fff', backgroundStyle: '', content1: { type: '', data: '' } } },
             description: ''
           }
         };
@@ -81,7 +81,6 @@ function Dashboard () {
         <Card sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: '30vw', height: '15vw', minHeight: 50, maxHeight: 150, m: 3 }}>
           <CardActionArea onClick={() => navigate(`/presentation/${name}`)} sx={{ display: 'flex', width: '100%' }}>
             {/* <CardMedia
-              component="img"
               height="140"
               image="/static/images/cards/contemplative-reptile.jpg" // Change to your dynamic image if available
               alt="presentation thumbnail"

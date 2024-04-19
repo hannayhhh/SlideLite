@@ -5,6 +5,7 @@ import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -21,6 +22,9 @@ import TextDialog from '../commonUI/TextDialog';
 import ImgDialog from '../commonUI/ImgDialog';
 import VedioDialog from '../commonUI/VedioDialog';
 import CodeDialog from '../commonUI/CodeDialog';
+import ThemeDialog from '../commonUI/ThemeDialog';
+import FontDialog from '../commonUI/FontDialog';
+// import Preview from './Preview';
 
 function Presentation () {
   const navigate = useNavigate();
@@ -59,9 +63,13 @@ function Presentation () {
           <Typography
             style={{
               fontSize: `${content.size}em`,
+              fontFamily: slides[`slide${currentSlideIndex + 1}`]?.fontFamily,
               color: content.fontcolor,
               width: `${content.area}px`,
-              overflow: 'hidden'
+              overflow: 'hidden',
+              border: '1px solid #ccc',
+              padding: '6px',
+              boxSizing: 'border-box'
             }}
           >
             {content.data.text}
@@ -108,7 +116,7 @@ function Presentation () {
         return <Typography>Unsupported content type</Typography>;
     }
   };
-  console.log(slides);
+
   return (
     <>
       <AppBar position="static" sx={{ height: '10vh' }}>
@@ -132,7 +140,18 @@ function Presentation () {
           <VedioDialog slides={slides} slideId={currentSlideIndex + 1}/>
           <CodeDialog slides={slides} slideId={currentSlideIndex + 1}/>
         </Box>
-        <Box sx={{ flex: 1, border: '2px dashed gray', m: 5, p: 2, position: 'relative' }}>
+        <Box
+          sx={{
+            flex: 1,
+            border: '2px dashed gray',
+            m: 5,
+            p: 2,
+            position: 'relative',
+            background: slides[`slide${currentSlideIndex + 1}`]?.backgroundStyle
+              ? slides[`slide${currentSlideIndex + 1}`]?.backgroundStyle
+              : slides[`slide${currentSlideIndex + 1}`]?.background || '#fff',
+          }}
+        >
           {isLoading
             ? <Typography>Loading...</Typography>
             : <>
@@ -168,11 +187,16 @@ function Presentation () {
         <Box sx={{ width: '6%' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', height: '85vh' }}>
             <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-              <IconButton onClick={handleAddSlide} color="primary" sx={{ mb: 2 }}>
+              <IconButton onClick={handleAddSlide} color="primary" sx={{ m: 2 }}>
                 <AddIcon />
               </IconButton>
-              <IconButton onClick={() => deleteSlide(currentSlideIndex + 1)} color="secondary">
+              <IconButton onClick={() => deleteSlide(currentSlideIndex + 1)} color="secondary" sx={{ m: 2 }}>
                 <DeleteIcon />
+              </IconButton>
+              <ThemeDialog slides={slides} slideId={currentSlideIndex + 1}/>
+              <FontDialog slides={slides} slideId={currentSlideIndex + 1}/>
+              <IconButton onClick={() => navigate(`/${pptName}/preview`)} color="primary" sx={{ m: 2 }}>
+                <VisibilityIcon />
               </IconButton>
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'row' }}>

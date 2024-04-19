@@ -21,6 +21,7 @@ function VideoDialog ({ slides, slideId }) {
       [`slide${slideId}`]: {
         ...slideContents,
         [`content${newContentId}`]: {
+          id: newContentId,
           type: 'video',
           data: { videoURL, autoPlay },
           area: videoAreaSize
