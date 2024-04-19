@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Button, Box, Alert, Typography } from '@mui/material';
+import { Button, Box, Alert, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TextLine from '../commonUI/TextLine';
 import axios from 'axios';
 
 function Register () {
+  const theme = useTheme();
+  const matches = useMediaQuery(theme.breakpoints.down('sm'));
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
@@ -71,10 +73,10 @@ function Register () {
         onChange={(e) => setConfirmPassword(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
       />
-      <Button variant="contained" color="primary" onClick={handleRegister} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
+      <Button variant="contained" color="primary" onClick={handleRegister} sx={{ width: matches ? '80%' : '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Register
       </Button>
-      <Button variant="outlined" color="primary" onClick={() => navigate('/login')} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
+      <Button variant="outlined" color="primary" onClick={() => navigate('/login')} sx={{ width: matches ? '80%' : '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Back
       </Button>
     </Box>

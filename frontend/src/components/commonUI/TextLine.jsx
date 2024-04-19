@@ -1,7 +1,9 @@
 import React from 'react';
-import { TextField } from '@mui/material';
+import { TextField, useMediaQuery, useTheme } from '@mui/material';
 
 const TextLine = ({ label, value, onChange, onKeyDown, type = 'text', InputProps }) => {
+  const theme = useTheme();
+  const matches = useMediaQuery(theme.breakpoints.down('sm'));
   return (
     <TextField
       label={label}
@@ -12,7 +14,7 @@ const TextLine = ({ label, value, onChange, onKeyDown, type = 'text', InputProps
       onKeyDown={onKeyDown}
       InputProps={InputProps}
       margin="normal"
-      sx={{ mb: 2, width: '25%', maxWidth: 400 }}
+      sx={{ width: matches ? '80%' : '25%', maxWidth: 400, height: 45, mt: 2 }}
     />
   );
 };

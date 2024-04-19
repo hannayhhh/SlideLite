@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Box, Modal, Typography, TextField, AppBar, Toolbar, Grid, Card, CardContent, CardActionArea } from '@mui/material';
+import { Button, Box, Modal, Typography, TextField, AppBar, Toolbar, Grid, Card, CardContent, CardActionArea, useTheme, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useLogout } from '../../hook/useLogout';
 import { fetchData } from '../../services/getData';
 import { upgradeData } from '../../services/putData';
+// import Thumbnail from '../commonUI/Thumbnail ';
 
 function Dashboard () {
+  const theme = useTheme();
+  const matches = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [presentationName, setPresentationName] = useState('');
@@ -78,15 +81,11 @@ function Dashboard () {
     const presentation = presentations[name];
     return (
       <Grid item xs={12} sm={6} md={4} key={name}>
-        <Card sx={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: '30vw', height: '15vw', minHeight: 50, maxHeight: 150, m: 3 }}>
+        <Card sx={{ display: 'flex', flexDirection: matches ? 'column' : 'row', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: matches ? '70vw' : '30vw', height: matches ? '35vw' : '15vw', minHeight: 50, maxHeight: 150, m: 3 }}>
           <CardActionArea onClick={() => navigate(`/presentation/${name}`)} sx={{ display: 'flex', width: '100%' }}>
-            {/* <CardMedia
-              height="140"
-              image="/static/images/cards/contemplative-reptile.jpg" // Change to your dynamic image if available
-              alt="presentation thumbnail"
-            /> */}
-            <Box sx={{ width: '50%', height: '100%', bgcolor: 'grey.300' }} />
-            <CardContent sx={{ padding: 0, width: '50%', height: '100%', overflow: 'hidden' }} >
+            {/* <Thumbnail/> */}
+            <Box sx={{ width: '50%', height: matches ? '35vw' : '15vw', bgcolor: 'grey.300' }} />
+            <CardContent sx={{ padding: 0, width: '50%', height: matches ? '35vw' : '15vw', overflow: 'hidden' }} >
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', m: 1 }}>
               <Typography gutterBottom variant="h6" noWrap>
                 {name}

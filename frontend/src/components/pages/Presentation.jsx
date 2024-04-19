@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog, DialogActions, DialogTitle } from '@mui/material';
+import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog, DialogActions, DialogTitle, useTheme, useMediaQuery } from '@mui/material';
 
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
@@ -24,9 +24,11 @@ import VedioDialog from '../commonUI/VedioDialog';
 import CodeDialog from '../commonUI/CodeDialog';
 import ThemeDialog from '../commonUI/ThemeDialog';
 import FontDialog from '../commonUI/FontDialog';
-// import Preview from './Preview';
 
 function Presentation () {
+  const theme = useTheme();
+  const matches = useMediaQuery(theme.breakpoints.down('sm'));
+
   const navigate = useNavigate();
   const { pptName } = useParams();
   const [editedName, setEditedName] = useState(pptName);
@@ -119,7 +121,7 @@ function Presentation () {
 
   return (
     <>
-      <AppBar position="static" sx={{ height: '10vh' }}>
+      <AppBar position="static" sx={{ height: matches ? '8vh' : '10vh' }}>
         <Toolbar>
           <Typography variant="h4" sx={{ m: 1 }}>{pptName}</Typography>
           <IconButton color="inherit" onClick={handleEditOpen}>

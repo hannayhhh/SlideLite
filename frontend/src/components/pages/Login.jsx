@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Box, Alert, Typography, IconButton, InputAdornment } from '@mui/material';
+import { Button, Box, Alert, Typography, IconButton, InputAdornment, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TextLine from '../commonUI/TextLine';
 import Visibility from '@mui/icons-material/Visibility';
@@ -7,6 +7,8 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import axios from 'axios';
 
 function Login () {
+  const theme = useTheme();
+  const matches = useMediaQuery(theme.breakpoints.down('sm'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -78,10 +80,10 @@ function Login () {
           )
         }}
       />
-      <Button variant="contained" color="primary" onClick={handleLogin} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
+      <Button variant="contained" color="primary" onClick={handleLogin} sx={{ width: matches ? '80%' : '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Login
       </Button>
-      <Button variant="outlined" color="primary" onClick={() => navigate('/register')} sx={{ width: '25%', maxWidth: 400, height: 45, mt: 2 }}>
+      <Button variant="outlined" color="primary" onClick={() => navigate('/register')} sx={{ width: matches ? '80%' : '25%', maxWidth: 400, height: 45, mt: 2 }}>
         Register
       </Button>
     </Box>
