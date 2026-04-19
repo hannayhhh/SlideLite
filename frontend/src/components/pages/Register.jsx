@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button, Box, Alert, Typography, useMediaQuery, useTheme } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import TextLine from '../commonUI/TextLine';
-import axios from 'axios';
+import { register } from '../../services/auth';
 
 function Register () {
   const theme = useTheme();
@@ -27,7 +27,7 @@ function Register () {
     }
 
     try {
-      const { data } = await axios.post('http://localhost:5005/admin/auth/register', {
+      const { data } = await register({
         email, name, password
       });
       console.log('Registration successful:', data);

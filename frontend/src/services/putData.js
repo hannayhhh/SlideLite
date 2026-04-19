@@ -1,12 +1,8 @@
-import axios from 'axios';
-
-const baseUrl = 'http://localhost:5005/store';
+import { updateStore } from './store';
 
 export const upgradeData = async (token, data) => {
   try {
-    await axios.put(baseUrl, { store: data }, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await updateStore(data);
   } catch (error) {
     console.error('Error updating data:', error);
     throw error;

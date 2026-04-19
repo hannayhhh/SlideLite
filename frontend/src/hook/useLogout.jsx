@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import { logout as logoutRequest } from '../services/auth';
 
 export function useLogout () {
   const navigate = useNavigate();
@@ -7,12 +7,7 @@ export function useLogout () {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        await axios.post('http://localhost:5005/admin/auth/logout', {}, {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-        });
+        await logoutRequest();
         console.log('Logout successful');
       } catch (error) {
         if (error.response) {

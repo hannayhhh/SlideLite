@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import TextLine from '../commonUI/TextLine';
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
-import axios from 'axios';
+import { login } from '../../services/auth';
 
 function Login () {
   const theme = useTheme();
@@ -30,7 +30,7 @@ function Login () {
       return;
     }
     try {
-      const response = await axios.post('http://localhost:5005/admin/auth/login', {
+      const response = await login({
         email,
         password
       });

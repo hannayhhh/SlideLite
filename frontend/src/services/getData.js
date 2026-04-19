@@ -1,12 +1,8 @@
-import axios from 'axios';
-
-const baseUrl = 'http://localhost:5005/store';
+import { getStore } from './store';
 
 export const fetchData = async (token) => {
   try {
-    const response = await axios.get(baseUrl, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    const response = await getStore();
     return response.data.store.store;
   } catch (error) {
     console.error('Error fetching data:', error);
