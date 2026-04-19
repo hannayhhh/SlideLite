@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useLogout } from '../../hook/useLogout';
 import { fetchData } from '../../services/getData';
 import { upgradeData } from '../../services/putData';
-// import Thumbnail from '../commonUI/Thumbnail ';
+import SlideThumbnail from '../commonUI/SlideThumbnail';
 
 function Dashboard () {
   const theme = useTheme();
@@ -83,8 +83,7 @@ function Dashboard () {
       <Grid item xs={12} sm={6} md={4} key={name}>
         <Card sx={{ display: 'flex', flexDirection: matches ? 'column' : 'row', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: matches ? '70vw' : '30vw', height: matches ? '35vw' : '15vw', minHeight: 50, maxHeight: 150, m: 3 }}>
           <CardActionArea onClick={() => navigate(`/presentation/${name}`)} sx={{ display: 'flex', width: '100%' }}>
-            {/* <Thumbnail/> */}
-            <Box sx={{ width: '50%', height: matches ? '35vw' : '15vw', bgcolor: 'grey.300' }} />
+            <SlideThumbnail slide={presentation.slides?.slide1} />
             <CardContent sx={{ padding: 0, width: '50%', height: matches ? '35vw' : '15vw', overflow: 'hidden' }} >
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', m: 1 }}>
               <Typography gutterBottom variant="h6" noWrap>
