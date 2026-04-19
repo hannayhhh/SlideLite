@@ -1,11 +1,12 @@
 // Create, delete slides and slide transitions hook
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { upgradeData } from '../services/putData';
 import { fetchData } from '../services/getData';
 
 function useSlideManager (pptName) {
   const [slides, setSlides] = useState({});
+  const slidesRef = useRef({});
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(true);
 
@@ -16,21 +17,30 @@ function useSlideManager (pptName) {
     setIsLoading(true);
     const token = localStorage.getItem('token');
     const storeData = await fetchData(token);
-    setSlides(storeData.presentations[pptName].slides);
+    const latestSlides = storeData.presentations[pptName].slides;
+    slidesRef.current = latestSlides;
+    setSlides(latestSlides);
     setIsLoading(false);
   };
 
   /***************************************************************
                        Update the slides to backend
   ***************************************************************/
-  const updateSlides = async (newSlides) => {
+  const updateSlides = async (slidesOrUpdater, options = {}) => {
+    const { refresh = true } = options;
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
       return;
     }
 
+    const newSlides = typeof slidesOrUpdater === 'function'
+      ? slidesOrUpdater(slidesRef.current)
+      : slidesOrUpdater;
+
     try {
+      slidesRef.current = newSlides;
+      setSlides(newSlides);
       const storeData = await fetchData(token);
       const newPresentations = {
         ...storeData.presentations,
@@ -40,7 +50,9 @@ function useSlideManager (pptName) {
         }
       };
       await upgradeData(token, { ...storeData, presentations: newPresentations });
-      fetchSlide();
+      if (refresh) {
+        fetchSlide();
+      }
     } catch (error) {
       console.error('Error updating slides:', error);
     }

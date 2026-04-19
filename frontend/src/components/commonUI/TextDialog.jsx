@@ -1,39 +1,42 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import { Dialog, Typography, DialogTitle, DialogContent, DialogActions, TextField, Button } from '@mui/material';
-import useSlideManager from '../../hook/useSlideManager';
 
-function TextDialog ({ slides, slideId }) {
-  const { pptName } = useParams();
+function TextDialog ({ slides, slideId, updateSlides }) {
   const [textDialogOpen, setTextDialogOpen] = useState(false);
   const [text, setText] = useState('');
-  const [textAreaSize, setTextAreaSize] = useState('');
-  const [fontSize, setFontSize] = useState('');
-  const [color, setColor] = useState('');
-  const { updateSlides } = useSlideManager(pptName);
 
   const addTextToSlide = () => {
-    console.log(slides);
-    console.log(slideId);
-    const slideContents = slides[`slide${slideId}`];
-    const contentKeys = Object.keys(slideContents).filter(key => key.startsWith('content'));
-    const newContentId = contentKeys.length + 1;
-    const updatedSlides = {
-      ...slides,
-      [`slide${slideId}`]: {
-        ...slideContents,
-        [`content${newContentId}`]: {
-          id: newContentId,
-          type: 'text',
-          data: { text },
-          area: textAreaSize,
-          size: fontSize,
-          fontcolor: color
-        }
-      },
-    };
-    updateSlides(updatedSlides);
+    updateSlides((latestSlides) => {
+      const slideKey = `slide${slideId}`;
+      const slideContents = latestSlides[slideKey];
+      const contentKeys = Object.keys(slideContents).filter(key => key.startsWith('content'));
+      const contentIds = contentKeys.map(key => Number(key.replace('content', '')) || 0);
+      const textCount = contentKeys.filter(key => slideContents[key]?.type === 'text').length;
+      const newContentId = Math.max(0, ...contentIds) + 1;
+      const offset = (textCount % 6) * 3;
+
+      return {
+        ...latestSlides,
+        [slideKey]: {
+          ...slideContents,
+          [`content${newContentId}`]: {
+            id: newContentId,
+            type: 'text',
+            data: { text },
+            position: {
+              x: 35 + offset,
+              y: 42 + offset,
+              width: 30,
+              height: 14
+            },
+            size: '2',
+            fontcolor: '#000000'
+          }
+        },
+      };
+    }, { refresh: false });
+    setText('');
     setTextDialogOpen(false);
   };
 
@@ -45,8 +48,6 @@ function TextDialog ({ slides, slideId }) {
     setTextDialogOpen(false);
   };
 
-  // Make sure all the Typography is filled
-  // a little question here, only refresh page can see the new content
   return (
     <>
       <Button variant="outlined" color="inherit" onClick={handleTextDialogOpen} sx={{ m: 2, p: 1, width: '90%', height: '15vh' }}>
@@ -66,36 +67,9 @@ function TextDialog ({ slides, slideId }) {
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
-          <TextField
-            margin="dense"
-            id="size"
-            label="Text Area Size"
-            type="text"
-            fullWidth
-            value={textAreaSize}
-            onChange={(e) => setTextAreaSize(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            id="fontSize"
-            label="Font Size (em)"
-            type="text"
-            fullWidth
-            value={fontSize}
-            onChange={(e) => setFontSize(e.target.value)}
-          />
-          <TextField
-            margin="dense"
-            id="color"
-            label="Text Color (HEX)"
-            type="text"
-            fullWidth
-            value={color}
-            onChange={(e) => setColor(e.target.value)}
-          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={addTextToSlide} color="primary" disabled={!text || !textAreaSize || !fontSize || !color} >
+          <Button onClick={addTextToSlide} color="primary" disabled={!text.trim()} >
             Add
           </Button>
           <Button onClick={handleTextDialogClose} color="primary">

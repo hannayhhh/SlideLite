@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog, DialogActions, DialogTitle, useTheme, useMediaQuery } from '@mui/material';
 
@@ -24,6 +24,7 @@ import VedioDialog from '../commonUI/VedioDialog';
 import CodeDialog from '../commonUI/CodeDialog';
 import ThemeDialog from '../commonUI/ThemeDialog';
 import FontDialog from '../commonUI/FontDialog';
+import EditableTextBox from '../commonUI/EditableTextBox';
 
 function Presentation () {
   const theme = useTheme();
@@ -33,9 +34,10 @@ function Presentation () {
   const { pptName } = useParams();
   const [editedName, setEditedName] = useState(pptName);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const slideCanvasRef = useRef(null);
   const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
   const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
-  const { slides, handleAddSlide, deleteSlide, fetchSlide, isLoading } = useSlideManager(pptName);
+  const { slides, handleAddSlide, deleteSlide, fetchSlide, isLoading, updateSlides } = useSlideManager(pptName);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -58,25 +60,51 @@ function Presentation () {
   SyntaxHighlighter.registerLanguage('python', python);
   SyntaxHighlighter.registerLanguage('c', c);
 
+  const updateTextPosition = useCallback((contentKey, position) => {
+    updateElement(contentKey, { position }, false);
+  }, [currentSlideIndex, slides, updateSlides]);
+
+  const updateElement = useCallback((contentKey, patch, refresh = false) => {
+    const slideKey = `slide${currentSlideIndex + 1}`;
+    const currentSlide = slides[slideKey];
+    if (!currentSlide || !currentSlide[contentKey]) return;
+
+    const updatedSlides = {
+      ...slides,
+      [slideKey]: {
+        ...currentSlide,
+        [contentKey]: {
+          ...currentSlide[contentKey],
+          ...patch
+        }
+      }
+    };
+
+    updateSlides(updatedSlides, { refresh });
+  }, [currentSlideIndex, slides, updateSlides]);
+
+  const replaceElement = useCallback((contentKey, nextContent) => {
+    updateElement(contentKey, nextContent, false);
+  }, [updateElement]);
+
+  const deleteElement = useCallback((contentKey) => {
+    const slideKey = `slide${currentSlideIndex + 1}`;
+    const currentSlide = slides[slideKey];
+    if (!currentSlide || !currentSlide[contentKey]) return;
+
+    const updatedSlide = { ...currentSlide };
+    delete updatedSlide[contentKey];
+
+    updateSlides({
+      ...slides,
+      [slideKey]: updatedSlide
+    }, { refresh: false });
+  }, [currentSlideIndex, slides, updateSlides]);
+
   const renderContent = (content) => {
     switch (content.type) {
       case 'text':
-        return (
-          <Typography
-            style={{
-              fontSize: `${content.size}em`,
-              fontFamily: slides[`slide${currentSlideIndex + 1}`]?.fontFamily,
-              color: content.fontcolor,
-              width: `${content.area}px`,
-              overflow: 'hidden',
-              border: '1px solid #ccc',
-              padding: '6px',
-              boxSizing: 'border-box'
-            }}
-          >
-            {content.data.text}
-          </Typography>
-        );
+        return null;
       case 'image':
         return (
           <img
@@ -137,12 +165,13 @@ function Presentation () {
 
       <Box sx={{ display: 'flex', height: '90vh' }}>
         <Box sx={{ width: '18%', bgcolor: '#edf4f9', padding: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <TextDialog slides={slides} slideId={currentSlideIndex + 1}/>
+          <TextDialog slides={slides} slideId={currentSlideIndex + 1} updateSlides={updateSlides}/>
           <ImgDialog slides={slides} slideId={currentSlideIndex + 1}/>
           <VedioDialog slides={slides} slideId={currentSlideIndex + 1}/>
           <CodeDialog slides={slides} slideId={currentSlideIndex + 1}/>
         </Box>
         <Box
+          ref={slideCanvasRef}
           sx={{
             flex: 1,
             border: '2px dashed gray',
@@ -159,14 +188,30 @@ function Presentation () {
             : <>
                 {slides[`slide${currentSlideIndex + 1}`]
                   ? (
-                    // Map over each content key in the current slide
                       Object.keys(slides[`slide${currentSlideIndex + 1}`])
-                        .filter(key => key.startsWith('content')) // Ensure only content keys are processed
-                        .map(contentKey => (
-                        <div key={contentKey}>
-                            {renderContent(slides[`slide${currentSlideIndex + 1}`][contentKey])}
-                        </div>
-                        ))
+                        .filter(key => key.startsWith('content'))
+                        .map(contentKey => {
+                          const content = slides[`slide${currentSlideIndex + 1}`][contentKey];
+                          if (content.type === 'text') {
+                            return (
+                              <EditableTextBox
+                                key={contentKey}
+                                contentKey={contentKey}
+                                content={content}
+                                parentRef={slideCanvasRef}
+                                fontFamily={slides[`slide${currentSlideIndex + 1}`]?.fontFamily}
+                                onChangePosition={updateTextPosition}
+                                onDelete={deleteElement}
+                                onUpdate={replaceElement}
+                              />
+                            );
+                          }
+                          return (
+                            <div key={contentKey}>
+                              {renderContent(content)}
+                            </div>
+                          );
+                        })
                     )
                   : <Typography>No slide data available.</Typography>
                 }

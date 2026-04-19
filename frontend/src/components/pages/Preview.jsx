@@ -18,13 +18,17 @@ function Preview () {
       case 'text':
         return (
           <Typography
-            style={{
+            sx={{
+              position: content.position ? 'absolute' : 'static',
+              left: content.position ? `${content.position.x}%` : 'auto',
+              top: content.position ? `${content.position.y}%` : 'auto',
+              width: content.position ? `${content.position.width}%` : `${content.area}px`,
+              height: content.position ? `${content.position.height}%` : 'auto',
               fontSize: `${content.size}em`,
               fontFamily: slides[`slide${currentSlideIndex + 1}`]?.fontFamily,
               color: content.fontcolor,
-              width: `${content.area}px`,
               overflow: 'hidden',
-              border: '1px solid #ccc',
+              border: 'none',
               padding: '6px',
               boxSizing: 'border-box'
             }}
