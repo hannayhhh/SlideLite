@@ -1,2 +1,10 @@
 node_modules
 database.json
+
+frontend/build/
+frontend/build-check/
+frontend/build-verify/
+frontend/build-verify-text/
+frontend/build-verify-text-add/
+frontend/build-verify-overwrite/
+frontend/build-verify-deploy/
