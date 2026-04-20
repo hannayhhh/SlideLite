@@ -1,4 +1,5 @@
 import fs from 'fs';
+import path from 'path';
 import jwt from 'jsonwebtoken';
 import AsyncLock from 'async-lock';
 import { InputError, AccessError, } from './error';
@@ -6,7 +7,7 @@ import { InputError, AccessError, } from './error';
 const lock = new AsyncLock();
 
 const JWT_SECRET = 'llamallamaduck';
-const DATABASE_FILE = './database.json';
+const DATABASE_FILE = process.env.DATABASE_FILE || path.join(process.cwd(), 'database.json');
 
 /***************************************************************
                        State Management
@@ -20,6 +21,7 @@ const update = (admins) =>
   new Promise((resolve, reject) => {
     lock.acquire('saveData', () => {
       try {
+        fs.mkdirSync(path.dirname(DATABASE_FILE), { recursive: true });
         fs.writeFileSync(DATABASE_FILE, JSON.stringify({
           admins,
         }, null, 2));
