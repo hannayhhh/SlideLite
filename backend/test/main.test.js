@@ -28,8 +28,8 @@ const sendTry = async (typeFn, path, status = 200, payload = {}, token = null) =
 
 const validToken = async () => {
   const { token } = await postTry('/admin/auth/login', 200, {
-    email: 'hayden.smith@unsw.edu.au',
-    password: 'bananapie',
+    email: 'hannah,yh2001@gmail.com',
+    password: '123456',
   });
   return token;
 }
@@ -68,40 +68,40 @@ describe('Test the root path', () => {
 
   test('Registration of initial user', async () => {
     const body = await postTry('/admin/auth/register', 200, {
-      email: 'hayden.smith@unsw.edu.au',
-      password: 'bananapie',
-      name: 'Hayden',
+      email: 'hannah,yh2001@gmail.com',
+      password: '123456',
+      name: 'Hannah',
     });
     expect(body.token instanceof String);
   });
 
   test('Inability to re-register a user', async () => {
     const body = await postTry('/admin/auth/register', 400, {
-      email: 'hayden.smith@unsw.edu.au',
-      password: 'bananapie',
-      name: 'Hayden',
+      email: 'hannah,yh2001@gmail.com',
+      password: '123456',
+      name: 'Hannah',
     });
   });
 
   test('Login to an existing user', async () => {
     const body = await postTry('/admin/auth/login', 200, {
-      email: 'hayden.smith@unsw.edu.au',
-      password: 'bananapie',
+      email: 'hannah,yh2001@gmail.com',
+      password: '123456',
     });
     expect(body.token instanceof String);
   });
 
   test('Login attempt with invalid credentials 1', async () => {
     const body = await postTry('/admin/auth/login', 400, {
-      email: 'hayden.smith@unsw.edu.a',
-      password: 'bananapie',
+      email: 'hannah,yh2001@gmail.co',
+      password: '123456',
     });
   });
 
   test('Login attempt with invalid credentials 2', async () => {
     const body = await postTry('/admin/auth/login', 400, {
-      email: 'hayden.smith@unsw.edu.au',
-      password: 'bananapi',
+      email: 'hannah,yh2001@gmail.com',
+      password: '12345',
     });
   });
 
@@ -120,7 +120,7 @@ describe('Test the root path', () => {
   ***************************************************************/
   
   const STORE_1 = {
-    name:' Hayden',
+    name:' Hannah',
     height: 100,
   }
 

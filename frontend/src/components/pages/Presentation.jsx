@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Button, Box, AppBar, Toolbar, Typography, TextField, IconButton, Dialog, DialogActions, DialogTitle, useTheme, useMediaQuery } from '@mui/material';
 
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -31,22 +31,24 @@ function Presentation () {
   const matches = useMediaQuery(theme.breakpoints.down('sm'));
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { pptName } = useParams();
+  const routeSlides = location.state?.slides;
   const [editedName, setEditedName] = useState(pptName);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(location.state?.currentSlideIndex || 0);
   const slideCanvasRef = useRef(null);
   const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
   const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
-  const { slides, handleAddSlide, deleteSlide, fetchSlide, isLoading, updateSlides } = useSlideManager(pptName);
+  const { slides, handleAddSlide, deleteSlide, fetchSlide, isLoading, updateSlides } = useSlideManager(pptName, routeSlides);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    } else {
+    } else if (!routeSlides) {
       fetchSlide();
     }
-  }, [pptName, navigate]);
+  }, [pptName, navigate, routeSlides]);
 
   const nextSlide = () => {
     setCurrentSlideIndex(prev => (prev + 1 < Object.keys(slides).length ? prev + 1 : prev));
@@ -54,6 +56,12 @@ function Presentation () {
 
   const previousSlide = () => {
     setCurrentSlideIndex(prev => (prev - 1 >= 0 ? prev - 1 : prev));
+  };
+
+  const handleDeleteCurrentSlide = () => {
+    const slideCount = Object.keys(slides).length;
+    deleteSlide(currentSlideIndex + 1);
+    setCurrentSlideIndex(prev => Math.max(0, Math.min(prev, slideCount - 2)));
   };
 
   SyntaxHighlighter.registerLanguage('javascript', js);
@@ -237,12 +245,12 @@ function Presentation () {
               <IconButton onClick={handleAddSlide} color="primary" sx={{ m: 2 }}>
                 <AddIcon />
               </IconButton>
-              <IconButton onClick={() => deleteSlide(currentSlideIndex + 1)} color="secondary" sx={{ m: 2 }}>
+              <IconButton onClick={handleDeleteCurrentSlide} color="secondary" sx={{ m: 2 }}>
                 <DeleteIcon />
               </IconButton>
-              <ThemeDialog slides={slides} slideId={currentSlideIndex + 1}/>
+              <ThemeDialog slides={slides} slideId={currentSlideIndex + 1} updateSlides={updateSlides}/>
               <FontDialog slides={slides} slideId={currentSlideIndex + 1}/>
-              <IconButton onClick={() => navigate(`/${pptName}/preview`)} color="primary" sx={{ m: 2 }}>
+              <IconButton onClick={() => navigate(`/${pptName}/preview`, { state: { slides, currentSlideIndex } })} color="primary" sx={{ m: 2 }}>
                 <VisibilityIcon />
               </IconButton>
             </Box>

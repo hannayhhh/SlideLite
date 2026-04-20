@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton, MenuItem, Select, FormControlLabel, Checkbox, Box } from '@mui/material';
 import { SketchPicker } from 'react-color';
 import PaletteIcon from '@mui/icons-material/Palette';
-import useSlideManager from '../../hook/useSlideManager';
 
-function ThemeDialog ({ slides, slideId }) {
-  const { pptName } = useParams();
+function ThemeDialog ({ slides, slideId, updateSlides }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState(slides[`slide${slideId}`]?.background || '#ffffff');
   const [secondColor, setSecondColor] = useState('#000000');
   const [gradientDirection, setGradientDirection] = useState('to right');
   const [useGradient, setUseGradient] = useState(false);
   const [applyToAll, setApplyToAll] = useState(false);
-  const { updateSlides } = useSlideManager(pptName);
 
   const handleOpen = () => {
     setDialogOpen(true);
@@ -50,7 +46,7 @@ function ThemeDialog ({ slides, slideId }) {
       updatedSlides[`slide${slideId}`].background = backgroundStyle;
       updatedSlides[`slide${slideId}`].backgroundStyle = useGradient ? backgroundStyle : '';
     }
-    updateSlides(updatedSlides);
+    updateSlides(updatedSlides, { refresh: false });
   };
 
   return (

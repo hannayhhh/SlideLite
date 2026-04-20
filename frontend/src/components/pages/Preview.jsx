@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import useSlideManager from '../../hook/useSlideManager';
 import { Box, Typography, IconButton } from '@mui/material';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
@@ -9,9 +9,22 @@ import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 
 function Preview () {
   const navigate = useNavigate();
+  const location = useLocation();
   const { pptName } = useParams();
-  const { slides, fetchSlide, isLoading } = useSlideManager(pptName);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const routeSlides = location.state?.slides;
+  const { slides, fetchSlide, isLoading } = useSlideManager(pptName, routeSlides);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(location.state?.currentSlideIndex || 0);
+  const previewRef = useRef(null);
+  const slidesRef = useRef(slides);
+  const currentSlideIndexRef = useRef(currentSlideIndex);
+
+  useEffect(() => {
+    slidesRef.current = slides;
+  }, [slides]);
+
+  useEffect(() => {
+    currentSlideIndexRef.current = currentSlideIndex;
+  }, [currentSlideIndex]);
 
   const renderContent = (content) => {
     switch (content.type) {
@@ -90,18 +103,48 @@ function Preview () {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    } else {
+    } else if (!routeSlides) {
       fetchSlide();
     }
-  }, [navigate]);
+  }, [navigate, routeSlides]);
+
+  useEffect(() => {
+    const enterFullscreen = async () => {
+      try {
+        if (previewRef.current && !document.fullscreenElement) {
+          await previewRef.current.requestFullscreen();
+        }
+      } catch (error) {
+        console.error('Failed to enter fullscreen:', error);
+      }
+    };
+
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        navigate(`/presentation/${pptName}`, {
+          state: {
+            slides: slidesRef.current,
+            currentSlideIndex: currentSlideIndexRef.current
+          }
+        });
+      }
+    };
+
+    enterFullscreen();
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [navigate, pptName]);
 
   return (
     <>
-      <Box sx={{ border: 'none', height: '100vh', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Box ref={previewRef} sx={{ border: 'none', height: '100vh', width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', bgcolor: '#000' }}>
         <Box
         sx={{
           flex: 1,
-          m: 5,
+          m: 0,
           p: 2,
           height: '100vh',
           width: '100%',

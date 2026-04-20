@@ -8,3 +8,5 @@ frontend/build-verify-text/
 frontend/build-verify-text-add/
 frontend/build-verify-overwrite/
 frontend/build-verify-deploy/
+frontend/build-verify-slide-preview/
+frontend/build-verify-preview-loading/

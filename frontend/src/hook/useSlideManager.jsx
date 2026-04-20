@@ -1,14 +1,22 @@
 // Create, delete slides and slide transitions hook
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { upgradeData } from '../services/putData';
 import { fetchData } from '../services/getData';
 
-function useSlideManager (pptName) {
-  const [slides, setSlides] = useState({});
-  const slidesRef = useRef({});
+function useSlideManager (pptName, initialSlides = null) {
+  const [slides, setSlides] = useState(initialSlides || {});
+  const slidesRef = useRef(initialSlides || {});
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialSlides);
+
+  useEffect(() => {
+    if (initialSlides) {
+      slidesRef.current = initialSlides;
+      setSlides(initialSlides);
+      setIsLoading(false);
+    }
+  }, [initialSlides]);
 
   /***************************************************************
                        Get the newest slides data
@@ -81,28 +89,28 @@ function useSlideManager (pptName) {
                        Add Slide
   ***************************************************************/
   const handleAddSlide = async () => {
-    fetchSlide();
-    const newSlideId = Object.keys(slides).length + 1;
-    const newSlides = {
-      ...slides,
-      [`slide${newSlideId}`]: { id: newSlideId, background: '#fff', backgroundStyle: '', content1: { type: '', data: '' } }
-    };
-    updateSlides(newSlides);
+    updateSlides((latestSlides) => {
+      const newSlideId = Object.keys(latestSlides).length + 1;
+      return {
+        ...latestSlides,
+        [`slide${newSlideId}`]: { id: newSlideId, background: '#fff', backgroundStyle: '', content1: { type: '', data: '' } }
+      };
+    }, { refresh: false });
   };
 
   /***************************************************************
                        Delete Slide
   ***************************************************************/
   const deleteSlide = async (slideId) => {
-    fetchSlide();
-    if (Object.keys(slides).length === 1) {
-      alert('Cannot delete the only slide. Please delete the presentation instead.');
-      return;
-    }
-    const newSlides = { ...slides };
-    delete newSlides[`slide${slideId}`];
-    const updatedSlides = renumberSlides(newSlides, slideId);
-    updateSlides(updatedSlides);
+    updateSlides((latestSlides) => {
+      if (Object.keys(latestSlides).length === 1) {
+        alert('Cannot delete the only slide. Please delete the presentation instead.');
+        return latestSlides;
+      }
+      const newSlides = { ...latestSlides };
+      delete newSlides[`slide${slideId}`];
+      return renumberSlides(newSlides, slideId);
+    }, { refresh: false });
   };
 
   /***************************************************************
