@@ -19,15 +19,23 @@ function CodeDialog ({ slides, slideId }) {
   const { presentationId } = useParams();
   const [codeDialogOpen, setCodeDialogOpen] = useState(false);
   const [code, setCode] = useState('');
-  const [codeAreaSize, setcodeAreaSize] = useState('');
-  const [fontSize, setFontSize] = useState('');
+  const [fontSize, setFontSize] = useState('1');
   const [language, setLanguage] = useState('javascript');
   const { updateSlides } = useSlideManager(presentationId);
+
+  const resetDialog = () => {
+    setCode('');
+    setFontSize('1');
+    setLanguage('javascript');
+  };
 
   const addCodeToSlide = () => {
     const slideContents = slides[`slide${slideId}`];
     const contentKeys = Object.keys(slideContents).filter(key => key.startsWith('content'));
-    const newContentId = contentKeys.length + 1;
+    const contentIds = contentKeys.map(key => Number(key.replace('content', '')) || 0);
+    const codeCount = contentKeys.filter(key => slideContents[key]?.type === 'code').length;
+    const newContentId = Math.max(0, ...contentIds) + 1;
+    const offset = (codeCount % 4) * 3;
     const updatedSlides = {
       ...slides,
       [`slide${slideId}`]: {
@@ -36,14 +44,20 @@ function CodeDialog ({ slides, slideId }) {
           id: newContentId,
           type: 'code',
           data: { code },
-          area: codeAreaSize,
           size: fontSize,
-          language
+          language,
+          position: {
+            x: 18 + offset,
+            y: 18 + offset,
+            width: 48,
+            height: 38
+          }
         }
       },
     };
-    updateSlides(updatedSlides);
+    updateSlides(updatedSlides, { refresh: false });
     setCodeDialogOpen(false);
+    resetDialog();
   };
 
   const handleCodeDialogOpen = () => {
@@ -52,6 +66,7 @@ function CodeDialog ({ slides, slideId }) {
 
   const handleCodeDialogClose = () => {
     setCodeDialogOpen(false);
+    resetDialog();
   };
 
   return (
@@ -65,15 +80,6 @@ function CodeDialog ({ slides, slideId }) {
         <DialogContent>
           <TextField
             autoFocus
-            margin="dense"
-            id="codeAreaSize"
-            label="Code Area Size"
-            type="text"
-            fullWidth
-            value={codeAreaSize}
-            onChange={(e) => setcodeAreaSize(e.target.value)}
-          />
-          <TextField
             margin="dense"
             id="fontSize"
             label="Font Size (em)"
@@ -108,7 +114,7 @@ function CodeDialog ({ slides, slideId }) {
           </SyntaxHighlighter>
         </DialogContent>
         <DialogActions>
-          <Button onClick={addCodeToSlide} color="primary" disabled={!code || !codeAreaSize || !fontSize || !language}>
+          <Button onClick={addCodeToSlide} color="primary" disabled={!code.trim() || !fontSize || !language.trim()}>
             Add
           </Button>
           <Button onClick={handleCodeDialogClose} color="primary">

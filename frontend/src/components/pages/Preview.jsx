@@ -75,27 +75,58 @@ function Preview () {
         );
       case 'video':
         return (
-          <video
-            src={content.data.videoURL}
-            width={content.area}
-            autoPlay={content.data.autoPlay}
-            controls
-            style={{ maxWidth: '100%' }}
-          />
+          <Box
+            sx={{
+              position: content.position ? 'absolute' : 'relative',
+              left: content.position ? `${content.position.x}%` : 'auto',
+              top: content.position ? `${content.position.y}%` : 'auto',
+              width: content.position ? `${content.position.width}%` : '48%',
+              height: content.position ? `${content.position.height}%` : '34%',
+              overflow: 'hidden',
+              bgcolor: '#111'
+            }}
+          >
+            <video
+              src={content.data?.videoURL}
+              autoPlay={Boolean(content.data?.autoPlay)}
+              muted={Boolean(content.data?.autoPlay)}
+              controls
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </Box>
         );
       case 'code':
         return (
-          <SyntaxHighlighter
-            language={content.language}
-            style={docco}
-            customStyle={{
-              overflow: 'hidden',
-              fontSize: `${content.size}em`,
-              width: content.area ? `${content.area}px` : 'auto'
+          <Box
+            sx={{
+              position: content.position ? 'absolute' : 'relative',
+              left: content.position ? `${content.position.x}%` : 'auto',
+              top: content.position ? `${content.position.y}%` : 'auto',
+              width: content.position ? `${content.position.width}%` : '48%',
+              height: content.position ? `${content.position.height}%` : '38%',
+              overflow: 'hidden'
             }}
           >
-            {content.data.code}
-          </SyntaxHighlighter>
+            <SyntaxHighlighter
+              language={content.language}
+              style={docco}
+              customStyle={{
+                margin: 0,
+                width: '100%',
+                height: '100%',
+                overflow: 'auto',
+                fontSize: `${content.size || 1}em`,
+                boxSizing: 'border-box'
+              }}
+            >
+              {content.data?.code || ''}
+            </SyntaxHighlighter>
+          </Box>
         );
       case '':
         return;

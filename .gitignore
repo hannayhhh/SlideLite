@@ -16,3 +16,5 @@ frontend/build-verify-presentation-id/
 frontend/build-verify-image-upload/
 frontend/build-verify-select-resize/
 frontend/build-verify-text-edit-resize/
+frontend/build-verify-video-editing/
+frontend/build-verify-video-code-consistency/

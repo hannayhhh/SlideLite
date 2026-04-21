@@ -9,7 +9,6 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Light as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 import js from 'react-syntax-highlighter/dist/esm/languages/hljs/javascript';
 import python from 'react-syntax-highlighter/dist/esm/languages/hljs/python';
 import c from 'react-syntax-highlighter/dist/esm/languages/hljs/c';
@@ -20,12 +19,14 @@ import useSlideManager from '../../hook/useSlideManager';
 import { useLogout } from '../../hook/useLogout';
 import TextDialog from '../commonUI/TextDialog';
 import ImgDialog from '../commonUI/ImgDialog';
-import VedioDialog from '../commonUI/VedioDialog';
+import VideoDialog from '../commonUI/VideoDialog';
 import CodeDialog from '../commonUI/CodeDialog';
 import ThemeDialog from '../commonUI/ThemeDialog';
 import FontDialog from '../commonUI/FontDialog';
 import EditableTextBox from '../commonUI/EditableTextBox';
 import EditableImageBox from '../commonUI/EditableImageBox';
+import EditableVideoBox from '../commonUI/EditableVideoBox';
+import EditableCodeBox from '../commonUI/EditableCodeBox';
 import { useStoreContext } from '../../context/StoreContext';
 
 function Presentation () {
@@ -126,29 +127,9 @@ function Presentation () {
       case 'image':
         return null;
       case 'video':
-        return (
-          <video
-            src={content.data.videoURL}
-            width={content.area}
-            autoPlay={content.data.autoPlay}
-            controls
-            style={{ maxWidth: '100%' }}
-          />
-        );
+        return null;
       case 'code':
-        return (
-          <SyntaxHighlighter
-            language={content.language}
-            style={docco}
-            customStyle={{
-              overflow: 'hidden',
-              fontSize: `${content.size}em`,
-              width: content.area ? `${content.area}px` : 'auto'
-            }}
-          >
-            {content.data.code}
-          </SyntaxHighlighter>
-        );
+        return null;
       case '':
         return;
       default:
@@ -176,7 +157,7 @@ function Presentation () {
         <Box sx={{ width: '18%', bgcolor: '#edf4f9', padding: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <TextDialog slides={slides} slideId={currentSlideIndex + 1} updateSlides={updateSlides}/>
           <ImgDialog slides={slides} slideId={currentSlideIndex + 1}/>
-          <VedioDialog slides={slides} slideId={currentSlideIndex + 1}/>
+          <VideoDialog slides={slides} slideId={currentSlideIndex + 1}/>
           <CodeDialog slides={slides} slideId={currentSlideIndex + 1}/>
         </Box>
         <Box
@@ -224,6 +205,32 @@ function Presentation () {
                                 parentRef={slideCanvasRef}
                                 onChangePosition={updateElementPosition}
                                 onDelete={deleteElement}
+                              />
+                            );
+                          }
+                          if (content.type === 'video') {
+                            return (
+                              <EditableVideoBox
+                                key={contentKey}
+                                contentKey={contentKey}
+                                content={content}
+                                parentRef={slideCanvasRef}
+                                onChangePosition={updateElementPosition}
+                                onDelete={deleteElement}
+                                onUpdate={replaceElement}
+                              />
+                            );
+                          }
+                          if (content.type === 'code') {
+                            return (
+                              <EditableCodeBox
+                                key={contentKey}
+                                contentKey={contentKey}
+                                content={content}
+                                parentRef={slideCanvasRef}
+                                onChangePosition={updateElementPosition}
+                                onDelete={deleteElement}
+                                onUpdate={replaceElement}
                               />
                             );
                           }

@@ -70,14 +70,21 @@ function SlideThumbnail ({ slide }) {
               width: '72%',
               height: '42%',
               bgcolor: 'grey.900',
-              color: 'common.white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 10
+              overflow: 'hidden'
             }}
           >
-            Video
+            <Box
+              component="video"
+              src={content.data?.videoURL}
+              muted
+              playsInline
+              sx={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block'
+              }}
+            />
           </Box>
         );
       case 'code':
