@@ -5,12 +5,12 @@ import { Dialog, Typography, DialogTitle, DialogContent, DialogActions, TextFiel
 import useSlideManager from '../../hook/useSlideManager';
 
 function VideoDialog ({ slides, slideId }) {
-  const { pptName } = useParams();
+  const { presentationId } = useParams();
   const [videoDialogOpen, setVideoDialogOpen] = useState(false);
   const [videoURL, setVideoURL] = useState('');
   const [videoAreaSize, setVideoAreaSize] = useState('');
   const [autoPlay, setAutoPlay] = useState(false);
-  const { updateSlides } = useSlideManager(pptName);
+  const { updateSlides } = useSlideManager(presentationId);
 
   const addVideoToSlide = () => {
     const slideContents = slides[`slide${slideId}`];

@@ -10,9 +10,9 @@ import { docco } from 'react-syntax-highlighter/dist/esm/styles/hljs';
 function Preview () {
   const navigate = useNavigate();
   const location = useLocation();
-  const { pptName } = useParams();
+  const { presentationId } = useParams();
   const routeSlides = location.state?.slides;
-  const { slides, fetchSlide, isLoading } = useSlideManager(pptName, routeSlides);
+  const { slides, isLoading } = useSlideManager(presentationId, routeSlides);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(location.state?.currentSlideIndex || 0);
   const previewRef = useRef(null);
   const slidesRef = useRef(slides);
@@ -103,10 +103,8 @@ function Preview () {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    } else if (!routeSlides) {
-      fetchSlide();
     }
-  }, [navigate, routeSlides]);
+  }, [navigate]);
 
   useEffect(() => {
     const enterFullscreen = async () => {
@@ -121,7 +119,7 @@ function Preview () {
 
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
-        navigate(`/presentation/${pptName}`, {
+        navigate(`/presentation/${presentationId}`, {
           state: {
             slides: slidesRef.current,
             currentSlideIndex: currentSlideIndexRef.current
@@ -136,7 +134,7 @@ function Preview () {
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, [navigate, pptName]);
+  }, [navigate, presentationId]);
 
   return (
     <>

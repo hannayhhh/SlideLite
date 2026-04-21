@@ -5,12 +5,12 @@ import { Dialog, Typography, DialogTitle, DialogContent, DialogActions, TextFiel
 import useSlideManager from '../../hook/useSlideManager';
 
 function ImgDialog ({ slides, slideId }) {
-  const { pptName } = useParams();
+  const { presentationId } = useParams();
   const [ImgDialogOpen, setImgDialogOpen] = useState(false);
   const [imageURL, setImageURL] = useState('');
   const [imageArea, setImageArea] = useState('');
   const [imageDescription, setImageDescription] = useState('');
-  const { updateSlides } = useSlideManager(pptName);
+  const { updateSlides } = useSlideManager(presentationId);
 
   const addImageToSlide = () => {
     console.log(slides);

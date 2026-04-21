@@ -1,34 +1,25 @@
 // Create, delete slides and slide transitions hook
-import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { upgradeData } from '../services/putData';
-import { fetchData } from '../services/getData';
+import { useStoreContext } from '../context/StoreContext';
 
-function useSlideManager (pptName, initialSlides = null) {
-  const [slides, setSlides] = useState(initialSlides || {});
-  const slidesRef = useRef(initialSlides || {});
+function useSlideManager (presentationId, initialSlides = null) {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(!initialSlides);
-
-  useEffect(() => {
-    if (initialSlides) {
-      slidesRef.current = initialSlides;
-      setSlides(initialSlides);
-      setIsLoading(false);
-    }
-  }, [initialSlides]);
+  const { store, isLoading: storeLoading, refreshStore, updateStoreData } = useStoreContext();
+  const slides = store?.presentations?.[presentationId]?.slides || initialSlides || {};
+  const isLoading = storeLoading && Object.keys(slides).length === 0;
 
   /***************************************************************
                        Get the newest slides data
   ***************************************************************/
-  const fetchSlide = async () => {
-    setIsLoading(true);
+  const fetchSlide = async (options = {}) => {
     const token = localStorage.getItem('token');
-    const storeData = await fetchData(token);
-    const latestSlides = storeData.presentations[pptName].slides;
-    slidesRef.current = latestSlides;
-    setSlides(latestSlides);
-    setIsLoading(false);
+    if (!token) {
+      navigate('/login');
+      return {};
+    }
+
+    const latestStore = await refreshStore(options);
+    return latestStore?.presentations?.[presentationId]?.slides || {};
   };
 
   /***************************************************************
@@ -42,25 +33,29 @@ function useSlideManager (pptName, initialSlides = null) {
       return;
     }
 
-    const newSlides = typeof slidesOrUpdater === 'function'
-      ? slidesOrUpdater(slidesRef.current)
-      : slidesOrUpdater;
-
     try {
-      slidesRef.current = newSlides;
-      setSlides(newSlides);
-      const storeData = await fetchData(token);
-      const newPresentations = {
-        ...storeData.presentations,
-        [pptName]: {
-          ...storeData.presentations[pptName],
-          slides: newSlides
+      await updateStoreData((latestStore) => {
+        const latestPresentation = latestStore?.presentations?.[presentationId];
+        if (!latestPresentation) {
+          return latestStore;
         }
-      };
-      await upgradeData(token, { ...storeData, presentations: newPresentations });
-      if (refresh) {
-        fetchSlide();
-      }
+
+        const latestSlides = latestPresentation.slides || {};
+        const newSlides = typeof slidesOrUpdater === 'function'
+          ? slidesOrUpdater(latestSlides)
+          : slidesOrUpdater;
+
+        return {
+          ...latestStore,
+          presentations: {
+            ...latestStore.presentations,
+            [presentationId]: {
+              ...latestPresentation,
+              slides: newSlides
+            }
+          }
+        };
+      }, { refresh });
     } catch (error) {
       console.error('Error updating slides:', error);
     }
@@ -117,11 +112,15 @@ function useSlideManager (pptName, initialSlides = null) {
                        Delete Element
   ***************************************************************/
   const deleteElement = async (slideId, contentId) => {
-    await fetchSlide();
-    const newSlides = { ...slides };
-    const currentSlideContents = newSlides[`slide${slideId}`];
+    updateSlides((latestSlides) => {
+      const newSlides = { ...latestSlides };
+      const currentSlideContents = newSlides[`slide${slideId}`];
 
-    if (currentSlideContents && currentSlideContents[`content${contentId}`]) {
+      if (!currentSlideContents || !currentSlideContents[`content${contentId}`]) {
+        console.error('Slide or content does not exist');
+        return latestSlides;
+      }
+
       delete currentSlideContents[`content${contentId}`];
 
       const updatedContents = renumberContents(currentSlideContents, contentId);
@@ -130,10 +129,9 @@ function useSlideManager (pptName, initialSlides = null) {
         ...currentSlideContents,
         ...updatedContents
       };
-      updateSlides(newSlides);
-    } else {
-      console.error('Slide or content does not exist');
-    }
+
+      return newSlides;
+    }, { refresh: false });
   };
 
   const renumberContents = (contents, deleteContentId) => {

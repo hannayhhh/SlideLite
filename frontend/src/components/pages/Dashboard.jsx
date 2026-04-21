@@ -2,63 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { Button, Box, Modal, Typography, TextField, AppBar, Toolbar, Grid, Card, CardContent, CardActionArea, useTheme, useMediaQuery } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { useLogout } from '../../hook/useLogout';
-import { fetchData } from '../../services/getData';
-import { upgradeData } from '../../services/putData';
+import { useStoreContext } from '../../context/StoreContext';
+import { getNextPresentationId } from '../../utils/presentations';
 import SlideThumbnail from '../commonUI/SlideThumbnail';
 
 function Dashboard () {
   const theme = useTheme();
   const matches = useMediaQuery(theme.breakpoints.down('sm'));
   const navigate = useNavigate();
+  const { store, updateStoreData } = useStoreContext();
   const [open, setOpen] = useState(false);
   const [presentationName, setPresentationName] = useState('');
-  const [presentations, setPresentations] = useState({});
-  const [createTrigger, setCreateTrigger] = useState(false);
+  const presentations = store?.presentations || {};
 
   // useEffect for handling login redirect if no token
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    } else {
-      fetchData(token).then(store => setPresentations(store.presentations || {}));// get the presentations
     }
   }, [navigate]);
-
-  // useEffect for creating presentation when conditions
-  useEffect(() => {
-    if (!createTrigger || !presentationName) return;
-    const createPresentation = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        const storeData = await fetchData(token);
-        if (storeData.presentations && storeData.presentations[presentationName]) {
-          console.log('Presentation already exists.');
-          return;
-        }
-
-        // Append new presentation if not exists
-        const newPresentations = {
-          ...storeData.presentations,
-          [presentationName]: {
-            slides: { slide1: { id: 1, background: '#fff', backgroundStyle: '', content1: { type: '', data: '' } } },
-            description: ''
-          }
-        };
-
-        await upgradeData(token, { ...storeData, presentations: newPresentations });
-        fetchData(token).then(store => setPresentations(store.presentations || {}));
-      } catch (error) {
-        console.error('Error creating new presentation:', error);
-      }
-    };
-
-    createPresentation().then(() => {
-      handleClose(); // Close modal on successful creation
-    });
-    setCreateTrigger(false); // Reset trigger
-  }, [createTrigger, presentationName, navigate]);
 
   // Handle modal open/close
   const handleOpen = () => setOpen(true);
@@ -68,26 +31,49 @@ function Dashboard () {
   };
 
   // Set trigger to start creation process
-  const handleCreateClick = () => {
-    if (presentationName.trim()) {
-      setCreateTrigger(true);
-    } else {
+  const handleCreateClick = async () => {
+    if (!presentationName.trim()) {
       console.log('Enter a valid presentation name.');
+      return;
+    }
+
+    try {
+      await updateStoreData((latestStore) => {
+        const nextPresentations = latestStore?.presentations || {};
+
+        const newPresentationId = String(getNextPresentationId(nextPresentations));
+
+        return {
+          ...latestStore,
+          presentations: {
+            ...nextPresentations,
+            [newPresentationId]: {
+              id: Number(newPresentationId),
+              name: presentationName,
+              slides: { slide1: { id: 1, background: '#fff', backgroundStyle: '', content1: { type: '', data: '' } } },
+              description: ''
+            }
+          }
+        };
+      });
+      handleClose();
+    } catch (error) {
+      console.error('Error creating new presentation:', error);
     }
   };
 
   // console.log(presentations);
-  const presentationCards = Object.keys(presentations).map(name => {
-    const presentation = presentations[name];
+  const presentationCards = Object.values(presentations).map(presentation => {
+    const presentationId = String(presentation.id);
     return (
-      <Grid item xs={12} sm={6} md={4} key={name}>
+      <Grid item xs={12} sm={6} md={4} key={presentationId}>
         <Card sx={{ display: 'flex', flexDirection: matches ? 'column' : 'row', justifyContent: 'space-between', minWidth: 100, maxWidth: 300, width: matches ? '70vw' : '30vw', height: matches ? '35vw' : '15vw', minHeight: 50, maxHeight: 150, m: 3 }}>
-          <CardActionArea onClick={() => navigate(`/presentation/${name}`)} sx={{ display: 'flex', width: '100%' }}>
+          <CardActionArea onClick={() => navigate(`/presentation/${presentationId}`)} sx={{ display: 'flex', width: '100%' }}>
             <SlideThumbnail slide={presentation.slides?.slide1} />
             <CardContent sx={{ padding: 0, width: '50%', height: matches ? '35vw' : '15vw', overflow: 'hidden' }} >
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', m: 1 }}>
               <Typography gutterBottom variant="h6" noWrap>
-                {name}
+                {presentation.name}
               </Typography>
               <Typography variant="body2" color="text.secondary" noWrap>
                 {`Slides: ${Object.keys(presentation.slides || {}).length}`}

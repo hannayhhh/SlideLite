@@ -1,12 +1,12 @@
 // Open dialog and Delete the current presentation
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { upgradeData } from '../services/putData';
-import { fetchData } from '../services/getData';
+import { useStoreContext } from '../context/StoreContext';
 
-function useDeletePPT (pptName) {
+function useDeletePPT (presentationId) {
   const [deleteOpen, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { updateStoreData } = useStoreContext();
 
   const handleOpenModal = () => setOpen(true);
   const handleCloseModal = () => setOpen(false);
@@ -18,10 +18,11 @@ function useDeletePPT (pptName) {
       return;
     }
     try {
-      const storeData = await fetchData(token); // Fetch current store
-      const newPresentations = { ...storeData.presentations }; // Copy presentations
-      delete newPresentations[pptName];
-      await upgradeData(token, { ...storeData, presentations: newPresentations }); // Update the presentations
+      await updateStoreData((latestStore) => {
+        const newPresentations = { ...(latestStore.presentations || {}) };
+        delete newPresentations[presentationId];
+        return { ...latestStore, presentations: newPresentations };
+      });
       navigate('/dashboard'); // back to dashboard after delete
     } catch (error) {
       console.error('Failed to delete presentation:', error);

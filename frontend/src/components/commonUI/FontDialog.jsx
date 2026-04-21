@@ -5,10 +5,10 @@ import FontDownloadIcon from '@mui/icons-material/FontDownload';
 import useSlideManager from '../../hook/useSlideManager';
 
 function FontDialog ({ slides, slideId }) {
-  const { pptName } = useParams();
+  const { presentationId } = useParams();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedFont, setSelectedFont] = useState(slides[`slide${slideId}`]?.fontFamily || 'Arial');
-  const { updateSlides } = useSlideManager(pptName);
+  const { updateSlides } = useSlideManager(presentationId);
 
   const handleOpen = () => {
     setDialogOpen(true);

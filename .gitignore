@@ -10,3 +10,6 @@ frontend/build-verify-overwrite/
 frontend/build-verify-deploy/
 frontend/build-verify-slide-preview/
 frontend/build-verify-preview-loading/
+frontend/build-verify-dashboard-cache/
+frontend/build-verify-store-context/
+frontend/build-verify-presentation-id/

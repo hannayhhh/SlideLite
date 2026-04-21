@@ -16,13 +16,13 @@ SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('c', c);
 
 function CodeDialog ({ slides, slideId }) {
-  const { pptName } = useParams();
+  const { presentationId } = useParams();
   const [codeDialogOpen, setCodeDialogOpen] = useState(false);
   const [code, setCode] = useState('');
   const [codeAreaSize, setcodeAreaSize] = useState('');
   const [fontSize, setFontSize] = useState('');
   const [language, setLanguage] = useState('javascript');
-  const { updateSlides } = useSlideManager(pptName);
+  const { updateSlides } = useSlideManager(presentationId);
 
   const addCodeToSlide = () => {
     const slideContents = slides[`slide${slideId}`];

@@ -25,6 +25,7 @@ import CodeDialog from '../commonUI/CodeDialog';
 import ThemeDialog from '../commonUI/ThemeDialog';
 import FontDialog from '../commonUI/FontDialog';
 import EditableTextBox from '../commonUI/EditableTextBox';
+import { useStoreContext } from '../../context/StoreContext';
 
 function Presentation () {
   const theme = useTheme();
@@ -32,23 +33,27 @@ function Presentation () {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const { pptName } = useParams();
+  const { presentationId } = useParams();
+  const { store } = useStoreContext();
+  const presentation = store?.presentations?.[presentationId];
   const routeSlides = location.state?.slides;
-  const [editedName, setEditedName] = useState(pptName);
+  const [editedName, setEditedName] = useState(presentation?.name || '');
   const [currentSlideIndex, setCurrentSlideIndex] = useState(location.state?.currentSlideIndex || 0);
   const slideCanvasRef = useRef(null);
-  const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(pptName);
-  const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(pptName, editedName);
-  const { slides, handleAddSlide, deleteSlide, fetchSlide, isLoading, updateSlides } = useSlideManager(pptName, routeSlides);
+  const { deleteOpen, handleOpenModal, handleCloseModal, handleDelete } = useDeletePPT(presentationId);
+  const { editOpen, handleEditOpen, handleEditClose, handleEditTitle } = useEditTitle(presentationId, editedName);
+  const { slides, handleAddSlide, deleteSlide, isLoading, updateSlides } = useSlideManager(presentationId, routeSlides);
+
+  useEffect(() => {
+    setEditedName(presentation?.name || '');
+  }, [presentation?.name]);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
-    } else if (!routeSlides) {
-      fetchSlide();
     }
-  }, [pptName, navigate, routeSlides]);
+  }, [navigate]);
 
   const nextSlide = () => {
     setCurrentSlideIndex(prev => (prev + 1 < Object.keys(slides).length ? prev + 1 : prev));
@@ -159,7 +164,7 @@ function Presentation () {
     <>
       <AppBar position="static" sx={{ height: matches ? '8vh' : '10vh' }}>
         <Toolbar>
-          <Typography variant="h4" sx={{ m: 1 }}>{pptName}</Typography>
+          <Typography variant="h4" sx={{ m: 1 }}>{presentation?.name || 'Presentation'}</Typography>
           <IconButton color="inherit" onClick={handleEditOpen}>
             <EditIcon />
           </IconButton>
@@ -250,7 +255,7 @@ function Presentation () {
               </IconButton>
               <ThemeDialog slides={slides} slideId={currentSlideIndex + 1} updateSlides={updateSlides}/>
               <FontDialog slides={slides} slideId={currentSlideIndex + 1}/>
-              <IconButton onClick={() => navigate(`/${pptName}/preview`, { state: { slides, currentSlideIndex } })} color="primary" sx={{ m: 2 }}>
+              <IconButton onClick={() => navigate(`/presentation/${presentationId}/preview`, { state: { slides, currentSlideIndex } })} color="primary" sx={{ m: 2 }}>
                 <VisibilityIcon />
               </IconButton>
             </Box>

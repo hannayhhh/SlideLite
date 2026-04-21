@@ -1,12 +1,12 @@
 // Open dialog and Edit the PPT title
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { upgradeData } from '../services/putData';
-import { fetchData } from '../services/getData';
+import { useStoreContext } from '../context/StoreContext';
 
-function useEditTitle (pptName, editedName) {
+function useEditTitle (presentationId, editedName) {
   const [editOpen, setEditOpen] = useState(false);
   const navigate = useNavigate();
+  const { store, updateStoreData } = useStoreContext();
 
   const handleEditOpen = () => {
     setEditOpen(true);
@@ -22,22 +22,29 @@ function useEditTitle (pptName, editedName) {
       return;
     }
     try {
-      const storeData = await fetchData(token); // Fetch current store
-      if (pptName === editedName) {
+      const trimmedName = editedName.trim();
+      const currentName = store?.presentations?.[presentationId]?.name || '';
+      if (!trimmedName || currentName === trimmedName) {
         console.log('New name is the same as the old name.');
         setEditOpen(false);
         return;
       }
-      const newPresentations = { ...storeData.presentations }; // Copy presentations
-      if (newPresentations[pptName]) {
-        newPresentations[editedName] = { ...newPresentations[pptName] }; // create new name & copy the old value
-        delete newPresentations[pptName];
-      } else {
-        console.error('Presentation not found.');
-        return;
-      }
-      await upgradeData(token, { ...storeData, presentations: newPresentations }); // Update the presentations
-      navigate(`/presentation/${editedName}`);
+
+      await updateStoreData((latestStore) => {
+        const newPresentations = { ...(latestStore.presentations || {}) };
+        if (!newPresentations[presentationId]) {
+          console.error('Presentation not found.');
+          return latestStore;
+        }
+
+        newPresentations[presentationId] = {
+          ...newPresentations[presentationId],
+          name: trimmedName
+        };
+        return { ...latestStore, presentations: newPresentations };
+      });
+
+      navigate(`/presentation/${presentationId}`);
       setEditOpen(false);
     } catch (error) {
       console.error('Failed to delete presentation:', error);

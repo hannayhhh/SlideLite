@@ -1,8 +1,10 @@
 import { useNavigate } from 'react-router-dom';
 import { logout as logoutRequest } from '../services/auth';
+import { useStoreContext } from '../context/StoreContext';
 
 export function useLogout () {
   const navigate = useNavigate();
+  const { clearStoreData } = useStoreContext();
   const logout = async () => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -19,6 +21,7 @@ export function useLogout () {
         }
       }
       localStorage.removeItem('token');
+      clearStoreData();
       navigate('/login');
     }
   };
