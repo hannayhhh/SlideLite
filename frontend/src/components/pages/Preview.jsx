@@ -51,14 +51,27 @@ function Preview () {
         );
       case 'image':
         return (
-          <img
-            src={content.data}
-            alt={content.description || 'Slide Image'}
-            style={{
-              maxWidth: content.area ? `${content.area}px` : '100%',
-              maxHeight: content.area ? `${content.area}px` : '100%'
+          <Box
+            sx={{
+              position: content.position ? 'absolute' : 'relative',
+              left: content.position ? `${content.position.x}%` : 'auto',
+              top: content.position ? `${content.position.y}%` : 'auto',
+              width: content.position ? `${content.position.width}%` : '40%',
+              height: content.position ? `${content.position.height}%` : '40%',
+              overflow: 'hidden'
             }}
-          />
+          >
+            <img
+              src={content.data}
+              alt={content.description || 'Slide Image'}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                display: 'block'
+              }}
+            />
+          </Box>
         );
       case 'video':
         return (

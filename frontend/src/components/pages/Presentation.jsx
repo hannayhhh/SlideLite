@@ -25,6 +25,7 @@ import CodeDialog from '../commonUI/CodeDialog';
 import ThemeDialog from '../commonUI/ThemeDialog';
 import FontDialog from '../commonUI/FontDialog';
 import EditableTextBox from '../commonUI/EditableTextBox';
+import EditableImageBox from '../commonUI/EditableImageBox';
 import { useStoreContext } from '../../context/StoreContext';
 
 function Presentation () {
@@ -100,6 +101,10 @@ function Presentation () {
     updateElement(contentKey, nextContent, false);
   }, [updateElement]);
 
+  const updateElementPosition = useCallback((contentKey, position) => {
+    updateElement(contentKey, { position }, false);
+  }, [updateElement]);
+
   const deleteElement = useCallback((contentKey) => {
     const slideKey = `slide${currentSlideIndex + 1}`;
     const currentSlide = slides[slideKey];
@@ -119,16 +124,7 @@ function Presentation () {
       case 'text':
         return null;
       case 'image':
-        return (
-          <img
-            src={content.data}
-            alt={content.description || 'Slide Image'}
-            style={{
-              maxWidth: content.area ? `${content.area}px` : '100%',
-              maxHeight: content.area ? `${content.area}px` : '100%'
-            }}
-          />
-        );
+        return null;
       case 'video':
         return (
           <video
@@ -216,6 +212,18 @@ function Presentation () {
                                 onChangePosition={updateTextPosition}
                                 onDelete={deleteElement}
                                 onUpdate={replaceElement}
+                              />
+                            );
+                          }
+                          if (content.type === 'image') {
+                            return (
+                              <EditableImageBox
+                                key={contentKey}
+                                contentKey={contentKey}
+                                content={content}
+                                parentRef={slideCanvasRef}
+                                onChangePosition={updateElementPosition}
+                                onDelete={deleteElement}
                               />
                             );
                           }

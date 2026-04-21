@@ -11,12 +11,27 @@ const defaultPosition = {
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 function EditableElementFrame ({ children, position = defaultPosition, parentRef, onChangePosition, onContextMenu }) {
+  const frameRef = useRef(null);
   const actionRef = useRef(null);
   const [draftPosition, setDraftPosition] = useState(position);
+  const [isSelected, setIsSelected] = useState(false);
 
   useEffect(() => {
     setDraftPosition(position);
   }, [position]);
+
+  useEffect(() => {
+    const handleDocumentMouseDown = (event) => {
+      if (frameRef.current && !frameRef.current.contains(event.target)) {
+        setIsSelected(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleDocumentMouseDown);
+    return () => {
+      document.removeEventListener('mousedown', handleDocumentMouseDown);
+    };
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -45,8 +60,12 @@ function EditableElementFrame ({ children, position = defaultPosition, parentRef
 
     const handleMouseUp = () => {
       if (actionRef.current) {
+        const actionSnapshot = actionRef.current;
         setDraftPosition((latestPosition) => {
-          onChangePosition(latestPosition);
+          onChangePosition(latestPosition, {
+            type: actionSnapshot.type,
+            startPosition: actionSnapshot.startPosition
+          });
           return latestPosition;
         });
       }
@@ -63,9 +82,12 @@ function EditableElementFrame ({ children, position = defaultPosition, parentRef
   }, [onChangePosition]);
 
   const startAction = (event, type) => {
+    if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     if (!parentRef.current) return;
+
+    setIsSelected(true);
 
     actionRef.current = {
       type,
@@ -78,6 +100,11 @@ function EditableElementFrame ({ children, position = defaultPosition, parentRef
 
   return (
     <Box
+      ref={frameRef}
+      onClick={(event) => {
+        event.stopPropagation();
+        setIsSelected(true);
+      }}
       onMouseDown={(event) => startAction(event, 'move')}
       onContextMenu={onContextMenu}
       sx={{
@@ -86,23 +113,42 @@ function EditableElementFrame ({ children, position = defaultPosition, parentRef
         top: `${draftPosition.y}%`,
         width: `${draftPosition.width}%`,
         height: `${draftPosition.height}%`,
-        overflow: 'hidden',
         cursor: 'move',
         boxSizing: 'border-box',
-        userSelect: 'none'
+        userSelect: 'none',
+        touchAction: 'none',
+        border: isSelected ? '1px solid rgba(25, 118, 210, 0.45)' : '1px solid transparent',
+        '& .resize-handle': {
+          opacity: isSelected ? 1 : 0,
+          pointerEvents: isSelected ? 'auto' : 'none'
+        }
       }}
     >
-      {children}
       <Box
-        component="span"
+        sx={{
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          borderRadius: 1,
+          backgroundColor: isSelected ? 'rgba(25, 118, 210, 0.03)' : 'transparent'
+        }}
+      >
+        {children}
+      </Box>
+      <Box
+        className="resize-handle"
         onMouseDown={(event) => startAction(event, 'resize')}
         sx={{
           position: 'absolute',
-          right: 0,
-          bottom: 0,
-          width: 12,
-          height: 12,
-          cursor: 'nwse-resize'
+          right: -1,
+          bottom: -1,
+          width: 16,
+          height: 16,
+          cursor: 'nwse-resize',
+          zIndex: 2,
+          borderRight: '3px solid rgba(106, 195, 230, 0.95)',
+          borderBottom: '3px solid rgba(106, 195, 230, 0.95)',
+          background: 'transparent'
         }}
       />
     </Box>

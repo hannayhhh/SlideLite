@@ -13,3 +13,6 @@ frontend/build-verify-preview-loading/
 frontend/build-verify-dashboard-cache/
 frontend/build-verify-store-context/
 frontend/build-verify-presentation-id/
+frontend/build-verify-image-upload/
+frontend/build-verify-select-resize/
+frontend/build-verify-text-edit-resize/
